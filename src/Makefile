@@ -4,8 +4,6 @@
 # On BeagleBone:
 #
 #   make
-#   make install
-#   make uninstall
 #
 # Cross compiling
 #
@@ -32,8 +30,9 @@ srcDir = ./
 objDir = $(buildDir)/obj
 
 CPPFLAGS += -fPIC -std=c++11
+LDFLAGS += -lrt
 
-cppFiles = main.cpp
+cppFiles = main.cpp Servo.cpp Timer.cpp
 oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 
 $(objDir)/%.o::	$(srcDir)/%.cpp

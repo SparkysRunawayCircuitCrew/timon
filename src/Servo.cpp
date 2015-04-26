@@ -62,7 +62,9 @@ bool Servo::set(float newVal) {
     << "  duty: " << pwm.getDutyValue() << "\n";
   */
 
-  if (ok == false) {
+  if (ok == true) {
+    curVal = newVal;
+  } else {
     // Something bad has happened
     disable();
   }
