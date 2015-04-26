@@ -74,7 +74,9 @@ download::	$(buildDir)/$(srcName)
 $(srcDir)::	$(buildDir)/$(srcName)
 	(cd $(buildDir) && unzip $(srcName))
 	sed -i -e 's,\(namespace BlackLib\),#include <unistd.h>\n\1,' \
-	  $(srcDir)/BlackI2C.cpp $(srcDir)/BlackSPI.cpp $(srcDir)/BlackUART.cpp 
+	  $(srcDir)/BlackI2C.cpp $(srcDir)/BlackSPI.cpp $(srcDir)/BlackUART.cpp
+
+src::	$(srcDir) 
 
 $(buildDir)/$(libName)::	$(srcDir)
 	$(MAKE) $(oFiles)
