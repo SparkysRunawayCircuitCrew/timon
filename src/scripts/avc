@@ -1,0 +1,94 @@
+#!/bin/sh -e
+#
+# Init script (place under /etc/init.d) to manage the autonomous vehicle
+# service (runs the /usr/sbin/avc program)
+#
+### BEGIN INIT INFO
+# Provides:          avc
+# Required-Start:    $local_fs
+# Required-Stop:     $local_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Run Autonomous Vehicle Command
+# Description:       Run Autonomous Vehicle Command (/usr/sbin/avc)
+### END INIT INFO
+
+# If the AVC command executable is present, then 
+name=avc;
+cmd=/usr/sbin/${name};
+pid="";
+pidFile=/var/run/${name}.pid;
+logFile=/var/log/${name}.log;
+
+if [ ! -x ${cmd} ]; then
+  exit 1;
+fi
+
+EXITSTATUS=0;
+
+#
+# Determine if process is running
+#
+get_status() {
+  if [ -f "${pidFile}" ]; then
+    pid=`cat ${pidFile}`;
+    if ps ${pid} > /dev/null 2>&1; then
+      return 0;
+    fi
+  fi
+  pid="";
+  return 1;
+}
+
+do_exit() {
+  if [ "$1" = "0" ]; then
+    echo ok;
+  else
+    echo FAIL;
+  fi
+  exit $1;
+}
+
+case "$1" in
+  start)
+    echo -n "Starting ${cmd} (Autonomous Vehicle) ... ";
+
+    if get_status; then
+      # Already running
+      EXITSTATUS=1;
+    else
+      ${cmd} >| /var/log/${name}.log 2>&1 < /dev/null &
+      pid=$!;
+      echo ${pid} >| /var/run/${name}.pid;
+    fi
+    do_exit $EXITSTATUS;
+    ;;
+
+  status)
+    if get_status; then
+      echo "${name} is running (PID: ${pid})";
+      exit 0;
+    fi
+    echo "${name} is not running";
+    exit 1;
+    ;;
+
+  stop)
+    echo -n "Shutting down ${cmd} (Autonomous Vehicle) ... ";
+    if get_status; then
+      /bin/kill ${pid} > /dev/null 2>&1 || EXITSTATUS=1;
+      /bin/rm -f ${pidFile};
+    fi
+    do_exit "$EXITSTATUS";
+    ;;
+
+  restart)
+    $0 stop || EXITSTATUS=1
+    $0 start || EXITSTATUS=1
+    exit $EXITSTATUS
+    ;;
+  *)
+    echo "Usage: $name {start|stop|restart}" >&2
+    exit 3
+    ;;
+esac
