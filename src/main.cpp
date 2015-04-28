@@ -86,6 +86,13 @@ int main(int argc, const char** argv) {
   signal(SIGINT, interrupted);
   signal(SIGTERM, interrupted);
 
+  // Left tread used PWM on P8_13 (EHRPWM2B) and direction 
+  // controls with P8_11 (GPIO_45) and P8_15 (GPIO_47)
+  //HBridge leftTread(BlackLib::P8_13, BlackLib::P8_11, BlackLib::P8_15);
+
+  // Left tread used PWM on P9_14 (EHRPWM1A) and direction 
+  // controls with P9_12 (GPIO_60) and P9_15 (GPIO_48)
+  //HBridge rightTread(BlackLib::P9_14, BlackLib::P9_12, BlackLib::P9_15);
   Servo steer(BlackLib::P8_13, -40.0, 40.0);
   Servo speed(BlackLib::P9_14, -1.0, +1.0);
 
@@ -93,12 +100,17 @@ int main(int argc, const char** argv) {
   BlackLib::BlackGPIO startButton(BlackLib::GPIO_22, BlackLib::input);
   bool startWasHigh = startButton.isHigh();
 
+  cout << "Entering main loop - waiting for trigger ...\n";
+
   while (hasBeenInterrupted == false) {
     bool startIsHigh = startButton.isHigh();
 
     // Run auton when button is pressed and then released
     if ((startWasHigh == true) && (startIsHigh == false)) {
+      cout << "Button released, starting auton\n";
+      Timer autonTimer;
       autonA(steer, speed);
+      cout << "Auton completed in " << autonTimer.secsElapsed() << " seconds\n";
     } else {
       Timer::sleep(0.05);
     }
@@ -106,6 +118,8 @@ int main(int argc, const char** argv) {
     // Save prior state
     startWasHigh = startIsHigh;
   }
+
+  cout << "Terminated by external signal\n";
 
   return 0;
 }
