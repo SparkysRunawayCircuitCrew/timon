@@ -44,5 +44,21 @@ $(buildDir)/$(name)::	$(oFiles)
 
 bin::	$(buildDir)/$(name)
 
+/usr/sbin/avc::	$(buildDir)/$(name)
+	install --mode=755 $(buildDir)/$(name) $(@);
+
+/etc/init.d/avc::	scripts/avc
+	install --mode=755 scripts/avc $(@);
+	chkconfig avc on;
+	chkconfig --list avc;
+	systemctl daemon-reload
+
+install::	/usr/sbin/avc /etc/init.d/avc
+
+uninstall::
+	@chkconfig avc off || true;
+	rm -f /usr/sbin/avc /etc/init.d/avc;
+	systemctl daemon-reload
+
 clean::
 	rm -fr $(buildDir)

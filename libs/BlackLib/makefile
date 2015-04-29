@@ -34,6 +34,7 @@ all::	$(tarFile)
 
 install::	$(tarFile)
 	tar xzf $(tarFile) -C /
+	ldconfig
 
 uninstall::
 	for f in $$(tar tzf $(tarFile)); do \
