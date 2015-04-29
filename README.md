@@ -14,10 +14,9 @@ our rbot.
   if you are using a different distribution.
 
 * The following packages will need to be apt-get installed:
-
-** unzip
-** g++-4.7 (the stock g++ on wheezy is 4.6)
-** chkconfig
+  * unzip
+  * g++-4.7 (the stock g++ on wheezy is 4.6)
+  * chkconfig
 
 ```sh
 apt-get install unzip g++-4.7 chkconfig
