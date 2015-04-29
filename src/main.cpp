@@ -1,5 +1,6 @@
 #include "Servo.h"
 #include "Timer.h"
+#include "UserLeds.h"
 
 #include <BlackGPIO.h>
 
@@ -54,14 +55,19 @@ void rampSpeed(Servo& esc, double newSpeed) {
  */
 void autonA(Servo& steer, Servo& speed) {
   Timer runTime;
+  // Use user LEDs to provide indication how far we make it through the code
+  int wayPoint = 1;
+  UserLeds& leds = UserLeds::getInstance();
 
   steer.set(0);
   Timer::sleep(0.5);
+  leds.setState(wayPoint++);
 
   // Set speed close to dead zone (0.135)
   speed.set(0.125);
   rampSpeed(speed, .16);
   Timer::sleep(1.0);
+  leds.setState(wayPoint++);
 
   // Slow down for corner
   rampSpeed(speed, .14);
@@ -69,6 +75,7 @@ void autonA(Servo& steer, Servo& speed) {
   // Turn for 2 seconds at slow speed
   steer.set(-20);
   Timer::sleep(2.0);
+  leds.setState(wayPoint++);
 
   // Straighten out and speed up on straight away
   steer.set(0);
@@ -77,6 +84,7 @@ void autonA(Servo& steer, Servo& speed) {
   // Let it go straight for 1 second, then shut her down
   Timer::sleep(1.0);
   rampSpeed(speed, 0);
+  leds.setState(wayPoint++);
 
   // Get a dump of the total run time as JSON (just for kicks)
   runTime.printJson(cout << "var runTimeTotal = ") << "\n";
@@ -85,6 +93,8 @@ void autonA(Servo& steer, Servo& speed) {
 int main(int argc, const char** argv) {
   signal(SIGINT, interrupted);
   signal(SIGTERM, interrupted);
+  UserLeds& leds = UserLeds::getInstance();
+  int waitCnt = 0;
 
   // Left tread used PWM on P8_13 (EHRPWM2B) and direction 
   // controls with P8_11 (GPIO_45) and P8_15 (GPIO_47)
@@ -107,14 +117,22 @@ int main(int argc, const char** argv) {
 
     // Run auton when button is pressed and then released
     if ((startWasHigh == true) && (startIsHigh == false)) {
+      leds.setState(0xf);
       cout << "Button released, starting auton\n";
       Timer autonTimer;
       autonA(steer, speed);
       cout << "Auton completed in " << autonTimer.secsElapsed() << " seconds\n";
     } else {
       Timer::sleep(0.05);
+      int ledState = waitCnt & 0xf;
+      leds.setState(ledState);
+      if (ledState == 0) {
+	waitCnt = 1;
+      } else {
+	waitCnt <<= 1;
+      }
     }
-    
+    leds.setState(0x0);
     // Save prior state
     startWasHigh = startIsHigh;
   }
