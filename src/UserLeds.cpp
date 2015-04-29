@@ -84,11 +84,11 @@ bool UserLeds::setLed(int led, bool turnOn) {
       string fileName("brightness");
 
       if (turnOn) {
-	setBit(state, led);
-	ok = writeSysFile(led, fileName, "1");
+	      setBit(state, led);
+	      ok = writeSysFile(led, fileName, "1");
       } else {
-	clearBit(state, led);
-	ok = writeSysFile(led, fileName, "0");
+	      clearBit(state, led);
+	      ok = writeSysFile(led, fileName, "0");
       }
     }
   }

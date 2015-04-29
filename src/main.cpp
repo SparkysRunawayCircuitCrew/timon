@@ -36,7 +36,7 @@ void rampSpeed(Servo& esc, double newSpeed) {
     start.pause();
     esc.set(nextSpeed);
     cout << "Adjusted speed to: " << nextSpeed << " (timer: "
-	 << start.secsElapsed() << ")\n";
+	       << start.secsElapsed() << ")\n";
     nextSpeed += step;
     start.unpause();
     start.sleepUntilNextNano(stepPeriod);
@@ -127,9 +127,9 @@ int main(int argc, const char** argv) {
       int ledState = waitCnt & 0xf;
       leds.setState(ledState);
       if (ledState == 0) {
-	waitCnt = 1;
+	      waitCnt = 1;
       } else {
-	waitCnt <<= 1;
+	      waitCnt <<= 1;
       }
     }
     leds.setState(0x0);
