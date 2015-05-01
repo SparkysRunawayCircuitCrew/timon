@@ -85,6 +85,16 @@ namespace avc {
     }
 
     /**
+     * Resets and starts the timer, but in a paused state (elapsed
+     * time will return 0.0 until you unpause it).
+     */
+    bool startPaused() {
+      Timer::getTime(startTime);
+      endTime = startTime;
+      running = false;
+    }
+
+    /**
      * Pauses the timer (records the pause time and takes timer out of
      * running state).
      */
@@ -99,6 +109,15 @@ namespace avc {
      */
     bool unpause() {
       running = true;
+    }
+
+    /**
+     * Sets timer to a paused state and moves end time to start time
+     * so elapsed time will come back as 0.
+     */
+    bool zero() {
+      endTime = startTime;
+      running = false;
     }
 
     /**
