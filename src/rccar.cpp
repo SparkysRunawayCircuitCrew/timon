@@ -111,7 +111,6 @@ public:
 
   void doEnd(Command::State reason) {
     _car.print(cout, *this) << "\n";
-    _car.coast();
     _car.nextWaypoint();
   }
 
@@ -166,7 +165,6 @@ public:
   void doEnd(Command::State reason) {
     _car.print(cout, *this) << "\n";
     _car.setSteer(0);
-    _car.coast();
   }
 
 private:
@@ -225,6 +223,8 @@ int main(int argc, const char** argv) {
       car.add(new MakeTurn(car, 90.0));
       // Short drive to finish line
       car.add(new DriveToTurn(car, 0.5, 1.0));
+      // And stop (should probably just have a command for this)
+      car.add(new DriveToTurn(car, 0.0, 1.0));
 	      
       Timer autonTimer;
       Command::run(car);
