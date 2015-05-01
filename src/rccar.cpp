@@ -26,7 +26,7 @@ public:
   RcCar() :
     CommandSequence("RcCar"),
     _steer(BlackLib::P9_14, -40.0, 40.0),
-    _esc(BlackLib::P9_16, -1.0, +1.0),
+    _esc(BlackLib::P9_21, -1.0, +1.0),
     _wayPoint(1)
   {
   }

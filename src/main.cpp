@@ -97,9 +97,9 @@ int main(int argc, const char** argv) {
   int waitCnt = 0;
 
   // PWM on P9 at pin 14
-  Servo steer(BlackLib::EHRPWM1A, -40.0, 40.0);
+  Servo steer(BlackLib::P9_14, -40.0, 40.0);
   // PWM on P9 at pin 16
-  Servo speed(BlackLib::EHRPWM1B, -1.0, +1.0);
+  Servo speed(BlackLib::P9_16, -1.0, +1.0);
 
   // Start button connected to P9 pin 23 (GPIO_49)
   BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
