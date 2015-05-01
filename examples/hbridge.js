@@ -109,43 +109,32 @@ var gpioLeftPwm = "P9_14";
 var gpioLeftFwd = "P9_11";
 var gpioLeftRev = "P9_12";
 
-var gpioRightPwm = "P9_16";
+var gpioRightPwm = "P9_21";
 var gpioRightFwd = "P9_13";
 var gpioRightRev = "P9_15";
+
+var ainXAxis = "P9_36";
+var ainYAxis = "P9_38";
 
 //
 // Two "tank treads" to drive the vehicle
 //
-var leftTread = new Tread("Left", gpioLeftPwm, gpioLeftFwd, gpioLeftRev);
-var rightTread = new Tread("right", gpioRightPwm, gpioRightFwd, gpioRightRev);
+var rightTread = new Tread("RightTread", gpioRightPwm, gpioRightFwd, gpioRightRev);
+var leftTread = new Tread("LeftTread", gpioLeftPwm, gpioLeftFwd, gpioLeftRev);
 
 // global variable to hold x and y values read from Joystick
 var pos = {};
 
-// Periodic function to read joystick values and apply to drive motors
-function drive() {
-    b.analogRead('P9_36', onX);
-}
-
-// Shuts down the driving program
-function stopDrive() {
-    clearInterval(driveInterval);
-    driveInterval = null;
-    leftTread.setPower(0);
-    rightTread.setPower(0);
-}
-
 // Milliseconds between reading inputs, values above 200 will log info to console
 var inputDelay = 50;
-var driveInterval = setInterval(drive, inputDelay);
 
-// Set a timer to stop the program after letting it run a bit
-setTimeout(stopDrive, 60000);
+// How long to let the program run (in milliseconds)
+var driveTimeMillis = 60 * 1000;
 
 // After we get x-axis value from Joystick, go read y-axis value
 function onX(x) {
     pos.x = inputToPower(x.value);
-    b.analogRead('P9_38', onY);
+    b.analogRead(ainYAxis, onY);
 }
 
 // Call back after reading y-axis. At this point we have
@@ -207,3 +196,27 @@ function inputToPower(val) {
     power *= 100.0;
     return power.toFixed(0);
 }
+
+//
+// OK, here is where we actually start things
+//
+// 1. Start a periodic task to read/apply joystick values
+// 2. Add a timeout to shutdown the program down after a bit
+
+// Periodic function to read joystick values and apply to drive motors
+function drive() {
+    b.analogRead(ainXAxis, onX);
+}
+
+var driveInterval = setInterval(drive, inputDelay);
+
+// Shuts down the driving program
+function stopDrive() {
+    clearInterval(driveInterval);
+    driveInterval = null;
+    leftTread.setPower(0);
+    rightTread.setPower(0);
+}
+
+// Set a timer to stop the program after letting it run a bit
+setTimeout(stopDrive, driveTimeMillis);
