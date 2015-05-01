@@ -62,6 +62,21 @@ namespace avc {
     bool set(float val);
 
     /**
+     * Seeks the target value, but limits the maximum adjustment for
+     * the servo and enables the servo (method returns immediately as
+     * servo continues to move to desired target).
+     *
+     * @param val The new value that you are trying to reach.
+     *
+     * @param maxStep The maximum adjustment that can be made to the
+     * current setting.
+     *
+     * @return true if value accepted and servo set, false if value
+     * out of range and request ignored.
+     */
+    bool seek(float val, float maxStep);
+
+    /**
      * Returns true if servo is being controlled, false otherwise.
      */
     bool isEnabled() const {

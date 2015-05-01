@@ -56,6 +56,7 @@ bool Servo::set(float newVal) {
   /*
   std::cout
     << "newVal: " << newVal
+    << "  curVal: " << curVal
     << "  minVal: " << minVal
     << "  maxVal: " << maxVal
     << "  dutyPercent: " << (100.0 - dutyPercent)
@@ -68,8 +69,17 @@ bool Servo::set(float newVal) {
     // Something bad has happened
     disable();
   }
-
   return ok;
+}
+
+bool Servo::seek(float newVal, float maxStep) {
+  float desiredStep = newVal - curVal;
+  if (desiredStep < -maxStep) {
+    newVal = curVal - maxStep;
+  } else if (desiredStep > maxStep) {
+    newVal = curVal + maxStep;
+  }
+  return set(newVal);
 }
 
 bool Servo::enable(float dutyPercent) {
