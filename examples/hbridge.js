@@ -99,8 +99,25 @@ Tread.prototype.shiftIntoReverse = function() {
  * OK, now lets create two tread instances (for our robot) and control them
  * using 2 analog inputs.
  */
-var leftTread = new Tread("Left", "P8_13", "P8_11", "P8_15");
-var rightTread = new Tread("right", "P9_14", "P9_12", "P9_15");
+
+//
+// Robot Map
+//
+var gpioStart = "P9_23";  // Not used currently
+
+var gpioLeftPwm = "P9_14";
+var gpioLeftFwd = "P9_11";
+var gpioLeftRev = "P9_12";
+
+var gpioRightPwm = "P9_14";
+var gpioRightFwd = "P9_13";
+var gpioRightRev = "P9_15";
+
+//
+// Two "tank treads" to drive the vehicle
+//
+var leftTread = new Tread("Left", gpioLeftPwm, gpioLeftFwd, gpioLeftRev);
+var rightTread = new Tread("right", gpioRightPwm, gpioRightFwd, gpioRightRev);
 
 // global variable to hold x and y values read from Joystick
 var pos = {};
