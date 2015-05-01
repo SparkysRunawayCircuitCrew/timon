@@ -32,7 +32,8 @@ objDir = $(buildDir)/obj
 CPPFLAGS += -fPIC -std=c++11
 LDFLAGS += -lrt
 
-cppFiles = main.cpp Servo.cpp Timer.cpp UserLeds.cpp
+cppFiles = $(name).cpp Command.cpp CommandSequence.cpp Servo.cpp Timer.cpp UserLeds.cpp
+
 oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 
 $(objDir)/%.o::	$(srcDir)/%.cpp
