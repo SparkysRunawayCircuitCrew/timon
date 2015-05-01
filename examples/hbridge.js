@@ -109,7 +109,7 @@ var gpioLeftPwm = "P9_14";
 var gpioLeftFwd = "P9_11";
 var gpioLeftRev = "P9_12";
 
-var gpioRightPwm = "P9_14";
+var gpioRightPwm = "P9_16";
 var gpioRightFwd = "P9_13";
 var gpioRightRev = "P9_15";
 

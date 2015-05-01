@@ -36,7 +36,7 @@ void rampSpeed(Servo& esc, double newSpeed) {
     start.pause();
     esc.set(nextSpeed);
     cout << "Adjusted speed to: " << nextSpeed << " (timer: "
-	       << start.secsElapsed() << ")\n";
+	 << start.secsElapsed() << ")\n";
     nextSpeed += step;
     start.unpause();
     start.sleepUntilNextNano(stepPeriod);
@@ -96,18 +96,13 @@ int main(int argc, const char** argv) {
   UserLeds& leds = UserLeds::getInstance();
   int waitCnt = 0;
 
-  // Left tread used PWM on P8_13 (EHRPWM2B) and direction 
-  // controls with P8_11 (GPIO_45) and P8_15 (GPIO_47)
-  //HBridge leftTread(BlackLib::P8_13, BlackLib::P8_11, BlackLib::P8_15);
+  // PWM on P9 at pin 14
+  Servo steer(BlackLib::EHRPWM1A, -40.0, 40.0);
+  // PWM on P9 at pin 16
+  Servo speed(BlackLib::EHRPWM1B, -1.0, +1.0);
 
-  // Left tread used PWM on P9_14 (EHRPWM1A) and direction 
-  // controls with P9_12 (GPIO_60) and P9_15 (GPIO_48)
-  //HBridge rightTread(BlackLib::P9_14, BlackLib::P9_12, BlackLib::P9_15);
-  Servo steer(BlackLib::P8_13, -40.0, 40.0);
-  Servo speed(BlackLib::P9_14, -1.0, +1.0);
-
-  // Start button connected to P8 pin 19 (GPIO_22)
-  BlackLib::BlackGPIO startButton(BlackLib::GPIO_22, BlackLib::input);
+  // Start button connected to P9 pin 23 (GPIO_49)
+  BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
   bool startWasHigh = startButton.isHigh();
 
   cout << "Entering main loop - waiting for trigger ...\n";
