@@ -32,12 +32,17 @@ namespace avc {
       /** Command has never been started. */
       NEVER_STARTED = 2,
 
-      /** Command was running, but was interrupted by some external cause. */
-      INTERRUPTED = 3,
-
       /** Command was running, but failed to run in maximum time allowed. */
-      TIMED_OUT = 4
+      TIMED_OUT = 3,
+
+      /** Command was running, but was interrupted by some external cause. */
+      INTERRUPTED = 4
     };
+
+    /**
+     * Compares to states and returns the worst of the two.
+     */
+    static State worstState(State s1, State s2);
 
   protected:
     /**

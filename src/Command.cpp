@@ -13,6 +13,11 @@ using namespace std;
 // Command class
 //
 
+Command::State Command::worstState(Command::State s1, Command::State s2) {
+  // For this to work, we need to make our enum go from best to worst
+  return ((s1 > s2) ? s1 : s2);
+}
+
 Command::~Command() {
 }
 

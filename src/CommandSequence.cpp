@@ -73,7 +73,13 @@ Command::State CommandSequence::doExecute() {
 }
 
 void CommandSequence::doEnd(State reason) {
-  _currentIdx = _commands.size();
+  int n = _commands.size();
+  if (_currentIdx < n) {
+    // If we had a child command running, then end it
+    _commands[_currentIdx]->end(reason);
+  }
+  // Move index past end so we don't start any new commands
+  _currentIdx = n;
   _needInitialize = true;
 }
 

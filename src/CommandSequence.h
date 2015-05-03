@@ -1,7 +1,7 @@
 /**
  * CommandSequence definition.
  */
-#ifndef __avc_CommandSequnce_h
+#ifndef __avc_CommandSequence_h
 #define __avc_CommandSequence_h
 
 #include "Command.h"
