@@ -39,6 +39,7 @@ int main(int argc, const char** argv) {
   BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
   bool startWasHigh = startButton.isHigh();
 
+  // Create instance of vehicle
   Timon timon;
 
   cout << "Entering main loop - waiting for trigger ...\n";
@@ -67,7 +68,6 @@ int main(int argc, const char** argv) {
 	      waitCnt <<= 1;
       }
     }
-    leds.setState(0x0);
     // Save prior state
     startWasHigh = startIsHigh;
   }
@@ -92,25 +92,29 @@ Timon::Timon() :
 #endif
   _wayPoint(1)
 {
-  // TODO: Need real sensor update and catastrophic check command
-  //Command* check = new Command("Check");
-  //add(check);
-
   CommandSequence* drive = new CommandSequence("Drive");
   // Short drive to first corner
   drive->add(new DriveToTurn(*this, 0.2, 1.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to second corner
   drive->add(new DriveToTurn(*this, 0.2, 3.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Medium drive to third corner
   drive->add(new DriveToTurn(*this, 0.2, 2.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to fourth corner
   drive->add(new DriveToTurn(*this, 0.2, 3.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Short drive to finish line

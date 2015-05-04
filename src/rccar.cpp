@@ -34,6 +34,9 @@ int main(int argc, const char** argv) {
 
   cout << "Entering main loop - waiting for trigger ...\n";
 
+  // Create instance of car
+  RcCar car;
+
   while (hasBeenInterrupted == false) {
 
     bool startIsHigh = startButton.isHigh();
@@ -42,10 +45,10 @@ int main(int argc, const char** argv) {
     if ((startWasHigh == true) && (startIsHigh == false)) {
       leds.setState(0xf);
       cout << "Button released, starting auton\n";
-      RcCar car;
       
       Timer autonTimer;
       Command::run(car);
+
       cout << "Auton completed in " << autonTimer.secsElapsed() << " seconds\n";
     } else {
       Timer::sleep(0.05);
@@ -57,7 +60,6 @@ int main(int argc, const char** argv) {
 	      waitCnt <<= 1;
       }
     }
-    leds.setState(0x0);
     // Save prior state
     startWasHigh = startIsHigh;
   }
