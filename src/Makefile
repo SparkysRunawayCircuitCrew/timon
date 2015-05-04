@@ -37,9 +37,13 @@ cppFiles = $(name).cpp Command.cpp CommandParallel.cpp CommandSequence.cpp \
 
 oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 
+# Include dependency files
+-include $(oFiles:%.o=%.d)
+
 $(objDir)/%.o::	$(srcDir)/%.cpp
 	[ -d "$(objDir)" ] || install -d "$(objDir)";
-	$(COMPILE.cc) -o $(@) $(?)
+	$(COMPILE.cc) -o $(@) $(@:$(objDir)/%.o=%.cpp)
+	$(COMPILE.cc) -MM -MT "$(@)" -MF $(@:%.o=%.d) $(?)
 
 $(buildDir)/$(name)::	$(oFiles)
 	$(LINK.cpp) $(oFiles) -lBlackLib -o $(@)
