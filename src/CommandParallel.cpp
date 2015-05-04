@@ -64,7 +64,7 @@ Command::State CommandParallel::doExecute() {
     }
   }
 
-  return worstState;
+  return ((cntDone != n) ? Command::STILL_RUNNING : worstState);
 }
 
 void CommandParallel::doEnd(State reason) {
