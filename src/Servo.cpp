@@ -84,7 +84,8 @@ bool Servo::seek(float newVal, float maxStep) {
 
 bool Servo::enable(float dutyPercent) {
   if (enabled == false) {
-    enabled = pwm.setPeriodTime(servoPeriodNanos) &&
+    enabled = pwm.setDutyPercent(100.0) &&
+      pwm.setPeriodTime(servoPeriodNanos) &&
       pwm.setPolarity(BlackLib::straight) &&
       pwm.setDutyPercent(dutyPercent) &&
       pwm.setRunState(BlackLib::run);

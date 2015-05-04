@@ -78,8 +78,8 @@ RcCar::RcCar() :
   _wayPoint(1)
 {
   // TODO: Need real sensor update and catastrophic check command
-  Command* check = new Command("Check");
-  add(check);
+  //Command* check = new Command("Check");
+  //add(check);
 
   CommandSequence* drive = new CommandSequence("Drive");
   // Short drive to first corner

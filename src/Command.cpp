@@ -44,6 +44,7 @@ void Command::doEnd(State reason) {
 void Command::initialize() {
   _state = STILL_RUNNING;
   _timer.start();
+  doInitialize();
 }
 
 Command::State Command::execute() {
