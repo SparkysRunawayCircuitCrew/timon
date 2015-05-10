@@ -33,7 +33,7 @@ CPPFLAGS += -fPIC -std=c++11
 LDFLAGS += -lBlackLib -lrt
 
 cppFiles = $(name).cpp Command.cpp CommandParallel.cpp CommandSequence.cpp \
-	   HBridge.cpp Servo.cpp Timer.cpp UserLeds.cpp
+	   GyroBNO055.cpp HBridge.cpp Servo.cpp Timer.cpp UserLeds.cpp
 
 oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 
@@ -43,7 +43,7 @@ oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 $(objDir)/%.o::	$(srcDir)/%.cpp
 	[ -d "$(objDir)" ] || install -d "$(objDir)";
 	$(COMPILE.cc) -o $(@) $(@:$(objDir)/%.o=%.cpp)
-	$(COMPILE.cc) -MM -MT "$(@)" -MF $(@:%.o=%.d) $(?)
+	$(COMPILE.cc) -MM -MT $(@) -MF $(@:%.o=%.d) $(@:$(objDir)/%.o=%.cpp)
 
 $(buildDir)/$(name)::	$(oFiles)
 	$(LINK.cpp) $(oFiles) -lBlackLib -o $(@)

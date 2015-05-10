@@ -14,6 +14,8 @@
 #include "HBridge.h"
 #endif
 
+#include "GyroBNO055.h"
+
 namespace avc {
   /**
    * Definition of the RC car to control.
@@ -45,7 +47,23 @@ namespace avc {
     HBridge _left;
     HBridge _right;
 #endif
+    // Gyro to track direction of car
+    GyroBNO055 _gyro;
+
+    // Initial reading of the gyro at the start of the run
+    float _initHeading;
+
+    // Current heading of the car since the start of auton.
+    float _heading;
+
+    // Used to count how far we've progressed
     int _wayPoint;
+
+    // Will be true if something terrible happens
+    bool _crashed;
+
+    // Will be true once we've reached the final point in our drive
+    bool _done;
 
   public:
 
@@ -55,6 +73,44 @@ namespace avc {
     Timon();
     
     ~Timon();
+
+    /**
+     * Returns true if we've detected a crashed situation along the way.
+     */
+    bool hasCrashed() const { return _crashed; }
+
+    /**
+     * Returns true once we've reached the final destination.
+     */
+    bool isDone() const { return _done; }
+
+    /**
+     * Reads the state of all of the sensors attached to the vehicle.
+     */
+    void readSensors();
+
+    /**
+     * Returns the last reported heading from the gyro (from last
+     * "readSensors()" invocation).
+     *
+     * <p>NOTE: This is relative to the starting point (where the
+     * angle is "zeroed" by {@link #doInitialization}).</p>
+     *
+     * @return Absolute heading in the range of [0, 360] degrees.
+     */
+    float getHeading() const { return _heading; }
+
+    /**
+     * Returns the relative heading based on the last reported heading
+     * from the gyro (from last "readSensors()" invocation) and some
+     * previous value.
+     *
+     * @param initHeading The initial starting point (typically from
+     * some earliar invocation of {@link #getHeading}).
+     *
+     * @return Relative heading in the range of [-180, +180] degrees.
+     */
+    float getRelativeHeading(float initHeading) const;
 
     /**
      * Used to provide an indication that the car has reached the next
@@ -88,6 +144,15 @@ namespace avc {
     void disable();
 
     /**
+     * Forces a power value within the legal range.
+     *
+     * @param power The power value to check.
+     *
+     * @param Power value to apply (will be power or closest legal value).
+     */
+    static float rangeCheckPower(float power);
+
+    /**
      * Helper method to "slowly" move towards a target power level.
      *
      * @param power The goal we eventually want to reach.
@@ -105,7 +170,7 @@ namespace avc {
      *
      * @param leftPower The desired power output for the left side
      * (range of [-1, +1].
-
+     *
      * @param rightPower The desired power output for the right side
      * (range of [-1, +1].
      *
@@ -137,18 +202,6 @@ namespace avc {
     }
 
     /**
-     * Returns the gyro reading (TODO - not implemented yet).
-     *
-     * @return Absolute value of the gyro reading in signed decimal
-     * degrees wher e 0 is from the direction the car was facing when
-     * the gyro was zeroed.
-     */
-    float getAngle() {
-      // TODO - Need gyro reading or some other way to get angle of car
-      return 0.0;
-    }
-
-    /**
      * Will go true once we have detected that we've reached a corner
      * in the course and need to make a turn (TODO - not implemented
      * yet).
@@ -165,17 +218,6 @@ namespace avc {
     std::ostream& print(std::ostream& out, const Command& cmd) const;
 
   private:
-
-    /**
-     * Method to read the sensors attached to the car and check for
-     * catastrophic failure indicators.
-     *
-     * @return true if state is OK (we can continue to drive), false
-     * if catastrophic failure and we need to abort. NOTE: This method
-     * is called once per execute cycle by {@link #doExecute} before
-     * allowing commands to continue running.
-     */
-    bool checkState();
 
   };
 
@@ -222,16 +264,22 @@ namespace avc {
   private:
     Timon& _car;
     float _power;
+    float _initialHeading;
   };
 
   /**
-   * Command to make a turn.
+   * Command to make a relative turn in the range of [-150.0, +150.0]
+   * degrees.
+   *
+   * <p>This command will likely "blow up" with spastic spins if you
+   * try to make too large of a turn. If you keep your turns under 150
+   * degrees in either direction and you will probably be OK.</p>
    */
   class MakeTurn : public Command {
 
   public:
 
-    MakeTurn(Timon& car, float relativeAng = 90.0);
+    MakeTurn(Timon& car, float turn = 90.0);
     ~MakeTurn();
 
     void doInitialize();
@@ -243,8 +291,8 @@ namespace avc {
   private:
     Timon& _car;
     // How much to turn (in signed degrees)
-    float _relativeAng;
-    float _targetAng;
+    float _turn;
+    float _initialHeading;
   };
 }
 

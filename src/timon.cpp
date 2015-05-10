@@ -9,6 +9,7 @@
 
 #include <BlackGPIO.h>
 
+#include <cmath>
 #include <iostream>
 
 #include <signal.h>
@@ -63,9 +64,9 @@ int main(int argc, const char** argv) {
       int ledState = waitCnt & 0xf;
       leds.setState(ledState);
       if (ledState == 0) {
-	      waitCnt = 1;
+	waitCnt = 1;
       } else {
-	      waitCnt <<= 1;
+	waitCnt <<= 1;
       }
     }
     // Save prior state
@@ -90,35 +91,45 @@ Timon::Timon() :
   _left(LEFT_PWM, LEFT_GPIO_FWD, LEFT_GPIO_REV),
   _right(RIGHT_PWM, RIGHT_GPIO_FWD, RIGHT_GPIO_REV),
 #endif
-  _wayPoint(1)
+  _gyro(),
+  _initHeading(0),
+  _heading(0),
+  _wayPoint(1),
+  _crashed(false),
+  _done(false)
 {
+  if (!_gyro.reset()) {
+    cerr << "**ERROR*** Failed to reset gyro\n";
+    _crashed = true;
+  }
+
   CommandSequence* drive = new CommandSequence("Drive");
   // Short drive to first corner
-  drive->add(new DriveToTurn(*this, 0.2, 1.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
-  // Make a right hand turn
-  drive->add(new MakeTurn(*this, 90.0));
-  // Long drive to second corner
-  drive->add(new DriveToTurn(*this, 0.2, 3.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
-  // Make a right hand turn
-  drive->add(new MakeTurn(*this, 90.0));
-  // Medium drive to third corner
   drive->add(new DriveToTurn(*this, 0.2, 2.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
+  // Long drive to second corner
+  drive->add(new DriveToTurn(*this, 0.2, 5.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  // Make a right hand turn
+  drive->add(new MakeTurn(*this, 90.0));
+  // Medium drive to third corner
+  drive->add(new DriveToTurn(*this, 0.2, 4.0));
+  // Give 1/2 second to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  // Make a right hand turn
+  drive->add(new MakeTurn(*this, 90.0));
   // Long drive to fourth corner
-  drive->add(new DriveToTurn(*this, 0.2, 3.0));
+  drive->add(new DriveToTurn(*this, 0.2, 5.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Short drive to finish line
-  drive->add(new DriveToTurn(*this, 0.2, 1.0));
+  drive->add(new DriveToTurn(*this, 0.2, 2.0));
   // And stop (NOTE: this is optional now as the Timon class should
   // automatically disable everything after finishing an auton run)
   drive->add(DrivePowerTime::createStopCommand(*this));
@@ -133,16 +144,54 @@ Timon::~Timon() {
 }
 
 void Timon::doInitialize() {
+  _crashed = _done = false;
   _wayPoint = 1;
+
+  if (!_gyro.getHeading(_initHeading)) {
+    _crashed = true;
+    cerr << "***ERROR*** Gyro not responding (unable to read heading)\n";
+  }
+
   CommandParallel::doInitialize();
 }
 
-Command::State Timon::doExecute() {
-  if (checkState()) {
-    return CommandParallel::doExecute();
+void Timon::readSensors() {
+  float heading;
+  if (_gyro.getHeading(heading)) {
+    heading -= _initHeading;
+    if (heading < 0) {
+      heading += 360.0;
+    }
+    _heading = heading;
+  } else {
+    _crashed = true;
+    cerr << "***ERROR*** Gyro not responding (unable to read heading)\n";
   }
-  // Catastrophic failure!
-  return Command::INTERRUPTED;
+}
+
+float Timon::getRelativeHeading(float initHeading) const {
+  float relHeading = _heading - initHeading;
+  // Put in range of [0, 360]
+  if (relHeading < 0) {
+    relHeading += 360;
+  }
+  // Now adjust to range of [-180.0, +180.0]
+  if (relHeading > 180) {
+    relHeading -= 360;
+  }
+  return relHeading;
+}
+
+Command::State Timon::doExecute() {
+  readSensors();
+  if (hasCrashed()) {
+    // Make sure motors are turned off
+    coast();
+    // Catastrophic failure!
+    return Command::INTERRUPTED;
+  }
+
+  return CommandParallel::doExecute();
 }
 
 void Timon::doEnd(Command::State reason) {
@@ -159,16 +208,14 @@ void Timon::nextWaypoint() {
   leds.setState(_wayPoint++);
 }
 
-ostream& Timon::print(std::ostream& out, const Command& cmd) const {
-  out << cmd << "  Timon(left=" << _left.get() << ", right="
-      << _right.get() << ")";
-  return out;
+float Timon::rangeCheckPower(float power) {
+  return max(-1.0f, min(+1.0f, power));
 }
 
-bool Timon::checkState() {
-  // TODO: Need to start adding sensors and feed back
-  // For now, assume everything is OK
-  return true;
+ostream& Timon::print(std::ostream& out, const Command& cmd) const {
+  out << cmd << "  Timon(left=" << _left.get() << ", right="
+      << _right.get() << ", heading=" << _heading << ")";
+  return out;
 }
 
 //
@@ -178,16 +225,38 @@ bool Timon::checkState() {
 DriveToTurn::DriveToTurn(Timon& car, float power, float timeout) :
   Command("DriveToTurn", timeout),
   _car(car),
-  _power(power)
+  _power(power),
+  _initialHeading(0)
 {
 }
 
 void DriveToTurn::doInitialize() {
+  _initialHeading = _car.getHeading();
   _car.print(cout, *this) << "\n";
 }
 
 Command::State DriveToTurn::doExecute() {
-  _car.seekSpeed(_power);
+  float turned = _car.getRelativeHeading(_initialHeading);
+  float turnedMag = abs(turned);
+
+  float powerCorrect = 0;
+  if (turnedMag > 1.0) {
+    // TODO: Figure out a power correction (basically P of PID) based
+    // on how far turn is off
+    powerCorrect = turnedMag / 180 + 0.005;
+    powerCorrect = (turned > 0) ? powerCorrect : -powerCorrect;
+    cout << "Off course: " << turned << " degrees, power correct: "
+	 << powerCorrect << "\n";
+  }
+
+  float powerLeft = _power - powerCorrect;
+  float powerRight = _power + powerCorrect;
+
+  // Seek new drive power levels with power correction for steering
+  powerLeft = Timon::rangeCheckPower(powerLeft);
+  powerRight = Timon::rangeCheckPower(powerRight);
+  _car.seekDrive(powerLeft, powerRight);
+
   bool foundCorner = _car.detectedCorner();
   // TODO: Remove this time out override once we can detect the corner
   foundCorner = ((getElapsedTime() / getTimeout()) >= 0.5);
@@ -204,11 +273,11 @@ void DriveToTurn::doEnd(Command::State reason) {
 // Implementation of the MakeTurn class methods
 //
 
-MakeTurn::MakeTurn(Timon& car, float relativeAng) :
-  Command("MakeTurn", abs(relativeAng) / 50 + 0.1),
+MakeTurn::MakeTurn(Timon& car, float turn) :
+  Command("MakeTurn", 1.0 + abs(turn) / 50),
   _car(car),
-  _relativeAng(relativeAng),
-  _targetAng(0)
+  _turn(turn),
+  _initialHeading(0)
 {
 }
 
@@ -217,21 +286,28 @@ MakeTurn::~MakeTurn() {
 
 void MakeTurn::doInitialize() {
   _car.print(cout, *this) << "\n";
-  _targetAng = _car.getAngle() + _relativeAng;
+  _initialHeading = _car.getHeading();
 }
 
 Command::State MakeTurn::doExecute() {
-  float carAng = _car.getAngle();
-  float err = _targetAng - carAng;
+  float carTurned = _car.getRelativeHeading(_initialHeading);
+  float err = _turn - carTurned;
 
   // TODO: Delete once we figure out how to get angle (the
   // statement below makes 
-  float percentTimeElapsed = getElapsedTime() / getTimeout();
-  err = (percentTimeElapsed >= 0.5) ? 0.0 : (1.1 - percentTimeElapsed) * _relativeAng;
+  //float percentTimeElapsed = getElapsedTime() / getTimeout();
+  //err = (percentTimeElapsed >= 0.5) ? 0.0 : (1.1 - percentTimeElapsed) * _turn;
 
   // Limit to .2 power level
   float steer = min(0.2f, max(-0.2f, err / 15));
+  
+  steer = Timon::rangeCheckPower(steer);
   _car.seekDrive(steer, -steer);
+
+  // TODO: NOTE, this implementation does not take into account a minimum
+  // power to turn the car (for example, if we get within 10 degrees and
+  // drop the power too low, the car may stop turning and never reach
+  // the final target).
 
   _car.print(cout, *this) << "  err: " << err << "\n";
 
