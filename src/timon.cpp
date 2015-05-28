@@ -36,12 +36,16 @@ int main(int argc, const char** argv) {
   UserLeds& leds = UserLeds::getInstance();
   int waitCnt = 0;
 
-  // Start button connected to P9 pin 23 (GPIO_49)
-  BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
-  bool startWasHigh = startButton.isHigh();
-
   // Create instance of vehicle
   Timon timon;
+
+  // Start button connected to P9 18 (GPIO_4)
+  BlackLib::BlackGPIO startButton(BlackLib::GPIO_4, BlackLib::input);
+  // Extra mode start button connected to P9 24 (GPIO_15)
+  //BlackLib::BlackGPIO startButton(BlackLib::GPIO_15, BlackLib::input);
+  // Start button connected to P9 pin 23 (GPIO_49)
+  //BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
+  bool startWasHigh = startButton.isHigh();
 
   cout << "Entering main loop - waiting for trigger ...\n";
 
