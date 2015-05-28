@@ -40,10 +40,20 @@ make -C src
 sudo make -C src install
 ```
 
-* NOTE: The installation will build a device tree overlay file for the
-  BBB and install it as required when the "avc" service is started
-  (either at boot or using the service command). You can use the following
-  to check and see if the timon_gpio overlay is loaded (or load it if not)
+* NOTE: The installation does NOT install the necessary device tree
+  overlay by default, you must run the following build rule to install
+  the device tree overlay (and you will need to reboot after
+  installing):
+
+```
+make -C src dts
+sudo make -C src dts-install
+```
+
+* The device tree overlay file for the BBB will be installed if
+  required when the "avc" service is started (either at boot or using
+  the service command). You can use the following to check and see if
+  the timon_gpio overlay is loaded (or load it if not)
 
 ```
 sudo -i

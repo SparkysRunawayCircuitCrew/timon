@@ -59,10 +59,7 @@ bin::	$(buildDir)/$(name)
 	chkconfig --list avc;
 	systemctl daemon-reload
 
-install::	/usr/sbin/avc /etc/init.d/avc /lib/firmware/timon-gpio-00A0.dtbo
-
-/lib/firmware/timon-gpio-00A0.dtbo:	$(buildDir)/timon-gpio-00A0.dtbo
-	cp -p $(?) $(@)
+install::	/usr/sbin/avc /etc/init.d/avc
 
 uninstall::
 	@chkconfig avc off || true;
@@ -72,10 +69,12 @@ uninstall::
 clean::
 	rm -fr $(buildDir)
 
-
-
 $(buildDir)/%-00A0.dtbo:	%.dts
 	dtc -O dtb -o $(@) -b 0 -@ $(?)
 
+/lib/firmware/timon-gpio-00A0.dtbo:	$(buildDir)/timon-gpio-00A0.dtbo
+	cp -p $(?) $(@)
+
 dts::	$(buildDir)/timon-gpio-00A0.dtbo
 
+dts-install::	 /lib/firmware/timon-gpio-00A0.dtbo
