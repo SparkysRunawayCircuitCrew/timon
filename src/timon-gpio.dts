@@ -21,8 +21,8 @@
 	  // Four output pins for H-Bridge direction
           0x15c 0x07 // P9_17 $87 GPIO0_5=5
           0x044 0x07 // P9_23 $17 GPIO1_17=49 
-          0x154 0x07 // P9_21 $85 GPIO0_3=3
           0x040 0x07 // P9_15 $16 GPIO1_16=48 
+          0x078 0x07 // P9_12 $30 GPIO1_28=60
 	  // Two input pins for reading back buttons
           0x158 0x27 // P9_18 $86 GPIO0_4=4
           0x184 0x27 // P9_24 $97 GPIO0_15=15

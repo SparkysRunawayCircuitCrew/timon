@@ -36,7 +36,21 @@ make -C libs/BlackLib CXX=g++-4.7 install
   Vehicle Competition code using the following commands:
 
 ```sh
-make -C src install
+make -C src
+sudo make -C src install
+```
+
+* NOTE: The installation will build a device tree overlay file for the
+  BBB and install it into the /lib/firmware directory. This overlay
+  file reconfiugres the GPIO pins to be compatible with the Timon
+  code. This overlay file is not loaded by default, to load it at boot
+  you will need to add the following to your /boot/uEnv.txt file and
+  then reboot (you should only need to do this one time when setting
+  up a new BBB):
+
+```
+# Load timon robot overlay (to configure GPIO pins)
+cape_enable=capemgr.enable_partno=timon-gpio
 ```
 
 * NOTE: The installation will install a copy of the code at
