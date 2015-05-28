@@ -19,6 +19,8 @@ cmd=/usr/sbin/${name};
 pid="";
 pidFile=/var/run/${name}.pid;
 logFile=/var/log/${name}.log;
+overlay=timon_gpio
+SLOTS=/sys/devices/bone_capemgr.9/slots
 
 if [ ! -x ${cmd} ]; then
   exit 1;
@@ -52,6 +54,8 @@ do_exit() {
 case "$1" in
   start)
     echo -n "Starting ${cmd} (Autonomous Vehicle) ... ";
+
+    grep -q ${overlay} ${SLOTS} || echo ${overlay} >| ${SLOTS};
 
     if get_status; then
       # Already running

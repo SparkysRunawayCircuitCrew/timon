@@ -41,16 +41,15 @@ sudo make -C src install
 ```
 
 * NOTE: The installation will build a device tree overlay file for the
-  BBB and install it into the /lib/firmware directory. This overlay
-  file reconfiugres the GPIO pins to be compatible with the Timon
-  code. This overlay file is not loaded by default, to load it at boot
-  you will need to add the following to your /boot/uEnv.txt file and
-  then reboot (you should only need to do this one time when setting
-  up a new BBB):
+  BBB and install it as required when the "avc" service is started
+  (either at boot or using the service command). You can use the following
+  to check and see if the timon_gpio overlay is loaded (or load it if not)
 
 ```
-# Load timon robot overlay (to configure GPIO pins)
-cape_enable=capemgr.enable_partno=timon-gpio
+sudo -i
+SLOTS=/sys/devices/bone_capemgr.9/slots
+grep timon-gpio ${SLOTS} || echo timon-gpio > ${SLOTS}
+cat ${SLOTS}
 ```
 
 * NOTE: The installation will install a copy of the code at
