@@ -40,28 +40,44 @@ int main(int argc, const char** argv) {
   Timon timon;
 
   // Start button connected to P9 18 (GPIO_4)
-  BlackLib::BlackGPIO startButton(BlackLib::GPIO_4, BlackLib::input);
+  BlackLib::BlackGPIO longButton(BlackLib::GPIO_4, BlackLib::input);
   // Extra mode start button connected to P9 24 (GPIO_15)
-  //BlackLib::BlackGPIO startButton(BlackLib::GPIO_15, BlackLib::input);
-  // Start button connected to P9 pin 23 (GPIO_49)
-  //BlackLib::BlackGPIO startButton(BlackLib::GPIO_49, BlackLib::input);
-  bool startWasHigh = startButton.isHigh();
+  BlackLib::BlackGPIO shortButton(BlackLib::GPIO_15, BlackLib::input);
+
+  bool longWasHigh = longButton.isHigh();
+  bool shortWasHigh = shortButton.isHigh();
 
   cout << "Entering main loop - waiting for trigger ...\n";
 
   while (hasBeenInterrupted == false) {
 
-    bool startIsHigh = startButton.isHigh();
+    bool shortIsHigh = shortButton.isHigh();
+    bool longIsHigh = longButton.isHigh();
 
     // Run auton when button is pressed and then released
-    if ((startWasHigh == true) && (startIsHigh == false)) {
+    if ((longWasHigh == true) && (longIsHigh == false)) {
+
       leds.setState(0xf);
-      cout << "Button released, starting auton\n";
+      cout << "Starting auton for long path around track\n";
+      timon.setAutonLongWay();
 
       Timer autonTimer;
       Command::run(timon);
 
-      cout << "Auton completed in " << autonTimer.secsElapsed() << " seconds\n";
+      cout << "Long path auton completed in " << autonTimer.secsElapsed() << " seconds\n";
+      timon.disable();
+
+    } else if ((shortWasHigh == true) && (shortIsHigh == false)) {
+
+      leds.setState(0xf);
+      cout << "Starting auton for short path around track\n";
+      timon.setAutonShortWay();
+
+      Timer autonTimer;
+      Command::run(timon);
+
+      cout << "Short path auton completed in " << autonTimer.secsElapsed() << " seconds\n";
+      timon.disable();
 
     } else {
       Timer::sleep(0.05);
@@ -74,7 +90,8 @@ int main(int argc, const char** argv) {
       }
     }
     // Save prior state
-    startWasHigh = startIsHigh;
+    longWasHigh = longIsHigh;
+    shortWasHigh = shortIsHigh;
   }
 
   cout << "Terminated by external signal\n";
@@ -107,9 +124,16 @@ Timon::Timon() :
     _crashed = true;
   }
 
+}
+
+void Timon::setAutonLongWay() {
+  clear();
+
   CommandSequence* drive = new CommandSequence("Drive");
+  // Give .25 seconds to let user move hand away
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
   // Short drive to first corner
-  drive->add(new DriveToTurn(*this, 0.2, 2.0));
+  drive->add(new DriveToTurn(*this, 0.3, 2.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
@@ -137,6 +161,18 @@ Timon::Timon() :
   // And stop (NOTE: this is optional now as the Timon class should
   // automatically disable everything after finishing an auton run)
   drive->add(DrivePowerTime::createStopCommand(*this));
+  add(drive);
+}
+
+void Timon::setAutonShortWay() {
+  clear();
+
+  CommandSequence* drive = new CommandSequence("Drive");
+  // Give .25 seconds to let user move hand away
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
+  // Make a left hand turn
+  drive->add(new MakeTurn(*this, -90.0));
+
   add(drive);
 }
 

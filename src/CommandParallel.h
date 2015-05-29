@@ -20,6 +20,8 @@ namespace avc {
 
     void add(Command* command);
 
+    void clear();
+
   protected:
     void doInitialize();
     State doExecute();

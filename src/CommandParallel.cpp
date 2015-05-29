@@ -10,10 +10,7 @@ using namespace avc;
 using namespace std;
 
 CommandParallel::~CommandParallel() {
-  int n = _commands.size();
-  for (int i = 0; i < n; i++) {
-    delete _commands[i];
-  }
+  clear();
 }
 
 CommandParallel::CommandParallel(const std::string& name, bool stopWhenOneDone) :
@@ -29,6 +26,15 @@ void CommandParallel::add(Command* command) {
   _commands.push_back(command);
   _states.push_back(Command::NEVER_STARTED);
   setTimeout(max(getTimeout(), command->getTimeout()));
+}
+
+void CommandParallel::clear() {
+  int n = _commands.size();
+  for (int i = 0; i < n; i++) {
+    delete _commands[i];
+  }
+  _commands.clear();
+  _states.clear();
 }
 
 void CommandParallel::doInitialize() {

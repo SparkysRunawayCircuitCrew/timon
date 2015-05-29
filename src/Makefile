@@ -78,3 +78,27 @@ $(buildDir)/%-00A0.dtbo:	%.dts
 dts::	$(buildDir)/timon-gpio-00A0.dtbo
 
 dts-install::	 /lib/firmware/timon-gpio-00A0.dtbo
+
+# Helper method to semi-install necessary runtime files to run on
+# other partition (like the local MMC)
+#
+#   sudo make disk-install DISK=/media/BEAGLEBONE_ 
+#
+# NOTE: You must have the chkconfig, sysvinit-utils, libc6, libstdc++6
+# and libgcc1 packages installed
+
+disk-install::	install
+
+disk-install::
+	if [ ! -d "$(DISK)" ]; then \
+	  echo "***ERROR*** You must specify the mount point of the disk like:"; \
+	  echo "  sudo make disk-install DISK=/media/BEAGLEBONE_ "; \
+	  exit 1; \
+	fi
+	rsync -avh /usr/local/lib/libBlack* $(DISK)/usr/local/lib;
+	rsync -avh /etc/init.d/avc $(DISK)/etc/init.d;
+	rsync -avh /usr/sbin/avc $(DISK)/usr/sbin;
+	cp -p $(buildDir)/timon-gpio-00A0.dtbo $(DISK)/lib/firmware/timon-gpio-00A0.dtbo;
+	chroot $(DISK) chkconfig --add avc;
+	chroot $(DISK) ldconfig;
+	@echo -e "Installed so you should be able to boot from $(DISK) now";
