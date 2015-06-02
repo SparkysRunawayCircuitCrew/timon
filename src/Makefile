@@ -23,6 +23,7 @@ endif
 
 all::	bin dts
 
+$(NAME)::	all
 
 CXX=g++-4.7
 

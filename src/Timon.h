@@ -26,18 +26,18 @@ namespace avc {
     // The "map" of GPIO pins (how things need to be wired)
 
     // P9 pin 16 (GPIO 51)
-    static const BlackLib::pwmName LEFT_PWM = BlackLib::P9_16;
+    static const BlackLib::pwmName RIGHT_PWM = BlackLib::P9_16;
     // P9 pin 17 (GPIO 5)
-    static const BlackLib::gpioName LEFT_GPIO_REV = BlackLib::GPIO_5;
+    static const BlackLib::gpioName RIGHT_GPIO_FWD = BlackLib::GPIO_5;
     // P9 pin 23 (GPIO 49)
-    static const BlackLib::gpioName LEFT_GPIO_FWD = BlackLib::GPIO_49;
+    static const BlackLib::gpioName RIGHT_GPIO_REV = BlackLib::GPIO_49;
 
     // P9 pin 21 (GPIO 3)
-    static const BlackLib::pwmName RIGHT_PWM = BlackLib::P9_21;
+    static const BlackLib::pwmName LEFT_PWM = BlackLib::P9_21;
     // P9 pin 15 (GPIO 48)
-    static const BlackLib::gpioName RIGHT_GPIO_REV = BlackLib::GPIO_48;
+    static const BlackLib::gpioName LEFT_GPIO_FWD = BlackLib::GPIO_48;
     // P9 pin 12 (GPIO 60)
-    static const BlackLib::gpioName RIGHT_GPIO_FWD = BlackLib::GPIO_60;
+    static const BlackLib::gpioName LEFT_GPIO_REV = BlackLib::GPIO_60;
 
   private:
 #if USE_SERVOS
@@ -303,6 +303,8 @@ namespace avc {
     // How much to turn (in signed degrees)
     float _turn;
     float _initialHeading;
+    float _lastErr;
+    int _inRangeCnt;
   };
 }
 

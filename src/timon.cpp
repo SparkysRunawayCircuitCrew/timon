@@ -169,7 +169,13 @@ void Timon::setAutonShortWay() {
 
   CommandSequence* drive = new CommandSequence("Drive");
   // Give .25 seconds to let user move hand away
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
+  drive->add(new DrivePowerTime(*this, 0.2, 0, 1.0));
+
+  // Uncomment to spin left side forward one second followed
+  // by right side forward for a second to verify logic is right
+  //drive->add(new DrivePowerTime(*this, 0.2, 0, 1.0));
+  //drive->add(new DrivePowerTime(*this, 0, .2, 1.0));
+
   // Make a left hand turn
   drive->add(new MakeTurn(*this, -90.0));
 
@@ -314,10 +320,12 @@ void DriveToTurn::doEnd(Command::State reason) {
 //
 
 MakeTurn::MakeTurn(Timon& car, float turn) :
-  Command("MakeTurn", 1.0 + abs(turn) / 50),
+  Command("MakeTurn", 1.0 + abs(turn) / 25),
   _car(car),
   _turn(turn),
-  _initialHeading(0)
+  _initialHeading(0),
+  _lastErr(0),
+  _inRangeCnt(0)
 {
 }
 
@@ -327,32 +335,52 @@ MakeTurn::~MakeTurn() {
 void MakeTurn::doInitialize() {
   _car.print(cout, *this) << "\n";
   _initialHeading = _car.getHeading();
+  _lastErr = _turn;
+  _inRangeCnt = 0;
 }
 
 Command::State MakeTurn::doExecute() {
   float carTurned = _car.getRelativeHeading(_initialHeading);
   float err = _turn - carTurned;
+  float deltaErr = _lastErr - err;
+  const float P = (0.15f * 10.0f / 360.0f);
+  const float D = (0.1f * 10.0f / 360.0f);
 
   // TODO: Delete once we figure out how to get angle (the
   // statement below makes 
   //float percentTimeElapsed = getElapsedTime() / getTimeout();
   //err = (percentTimeElapsed >= 0.5) ? 0.0 : (1.1 - percentTimeElapsed) * _turn;
 
-  // Limit to .2 power level
-  float steer = min(0.2f, max(-0.2f, err / 15));
+  float steer = err * P + deltaErr * D;
+  float steerMag = abs(steer);
+  const float minMag = 0.2f;
+  if (steerMag < minMag) {
+    steer = (steer < 0) ? -minMag : minMag;
+  }
+
+  // Limit to .35 power level
+  const float maxMag = 0.35f;
+  steer = min(maxMag, max(-maxMag, steer));
   
   steer = Timon::rangeCheckPower(steer);
-  _car.seekDrive(steer, -steer);
+  _car.drive(steer, -steer);
 
   // TODO: NOTE, this implementation does not take into account a minimum
   // power to turn the car (for example, if we get within 10 degrees and
   // drop the power too low, the car may stop turning and never reach
   // the final target).
 
-  _car.print(cout, *this) << "  err: " << err << "\n";
+  _car.print(cout, *this) << "  turned: " << carTurned << "  err: " << err << "\n";
+
+  _lastErr = err;
 
   // Done if within 3 degrees
-  return ((abs(err) < 3.0) ? Command::NORMAL_END : Command::STILL_RUNNING);
+  if (abs(err) < 3.0) {
+    _inRangeCnt++;
+  } else {
+    _inRangeCnt = 0;
+  }
+  return ((_inRangeCnt >= 3) ? Command::NORMAL_END : Command::STILL_RUNNING);
 }
 
 void MakeTurn::doEnd(Command::State reason) {
