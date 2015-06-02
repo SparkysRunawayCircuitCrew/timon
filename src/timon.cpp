@@ -129,36 +129,41 @@ Timon::Timon() :
 void Timon::setAutonLongWay() {
   clear();
   const float drivePow = 0.2;
+  const float stopSecs = 2.0;
+
+  // Max seconds to drive on short and long sides
+  const float shortSide = 2.0;
+  const float longSide = 3.0;
 
   CommandSequence* drive = new CommandSequence("Drive");
   // Give .25 seconds to let user move hand away
   drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
   // Short drive to first corner
-  drive->add(new DriveToTurn(*this, drivePow, 1.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  drive->add(new DriveToTurn(*this, drivePow, shortSide / 2));
+  // Give time to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to second corner
-  drive->add(new DriveToTurn(*this, drivePow, 3.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  drive->add(new DriveToTurn(*this, drivePow, longSide));
+  // Give time to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Medium drive to third corner
-  drive->add(new DriveToTurn(*this, drivePow, 2.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  drive->add(new DriveToTurn(*this, drivePow, shortSide));
+  // Give time to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to fourth corner
-  drive->add(new DriveToTurn(*this, drivePow, 3.0));
-  // Give 1/2 second to slow down
-  drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
+  drive->add(new DriveToTurn(*this, drivePow, longSide));
+  // Give time to slow down
+  drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
-  // Short drive to finish line
-  drive->add(new DriveToTurn(*this, drivePow, 1.0));
+  // Short drive to finish line (and a bit more to cross it)
+  drive->add(new DriveToTurn(*this, drivePow, shortSide / 2 + shortSide / 10));
   // And stop (NOTE: this is optional now as the Timon class should
   // automatically disable everything after finishing an auton run)
   drive->add(DrivePowerTime::createStopCommand(*this));
@@ -345,7 +350,7 @@ Command::State MakeTurn::doExecute() {
   float err = _turn - carTurned;
   float deltaErr = _lastErr - err;
   const float P = (0.15f * 10.0f / 360.0f);
-  const float D = (0.1f * 10.0f / 360.0f);
+  const float D = (0.2f * 10.0f / 360.0f);
 
   // TODO: Delete once we figure out how to get angle (the
   // statement below makes 
@@ -360,7 +365,7 @@ Command::State MakeTurn::doExecute() {
   }
 
   // Limit to .35 power level
-  const float maxMag = 0.35f;
+  const float maxMag = 0.30f;
   steer = min(maxMag, max(-maxMag, steer));
   
   steer = Timon::rangeCheckPower(steer);
