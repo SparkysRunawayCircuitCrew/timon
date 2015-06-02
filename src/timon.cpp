@@ -128,36 +128,37 @@ Timon::Timon() :
 
 void Timon::setAutonLongWay() {
   clear();
+  const float drivePow = 0.2;
 
   CommandSequence* drive = new CommandSequence("Drive");
   // Give .25 seconds to let user move hand away
   drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
   // Short drive to first corner
-  drive->add(new DriveToTurn(*this, 0.3, 2.0));
+  drive->add(new DriveToTurn(*this, drivePow, 1.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to second corner
-  drive->add(new DriveToTurn(*this, 0.2, 5.0));
+  drive->add(new DriveToTurn(*this, drivePow, 3.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Medium drive to third corner
-  drive->add(new DriveToTurn(*this, 0.2, 4.0));
+  drive->add(new DriveToTurn(*this, drivePow, 2.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Long drive to fourth corner
-  drive->add(new DriveToTurn(*this, 0.2, 5.0));
+  drive->add(new DriveToTurn(*this, drivePow, 3.0));
   // Give 1/2 second to slow down
   drive->add(new DrivePowerTime(*this, 0, 0, 0.5));
   // Make a right hand turn
   drive->add(new MakeTurn(*this, 90.0));
   // Short drive to finish line
-  drive->add(new DriveToTurn(*this, 0.2, 2.0));
+  drive->add(new DriveToTurn(*this, drivePow, 1.0));
   // And stop (NOTE: this is optional now as the Timon class should
   // automatically disable everything after finishing an auton run)
   drive->add(DrivePowerTime::createStopCommand(*this));
@@ -169,7 +170,7 @@ void Timon::setAutonShortWay() {
 
   CommandSequence* drive = new CommandSequence("Drive");
   // Give .25 seconds to let user move hand away
-  drive->add(new DrivePowerTime(*this, 0.2, 0, 1.0));
+  drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
 
   // Uncomment to spin left side forward one second followed
   // by right side forward for a second to verify logic is right
