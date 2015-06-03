@@ -1,0 +1,14 @@
+Steps for Timon:
+
+1. Battery power must be connected, motors should be UNPLUGGED.
+2. Flip power switch, wait for BBB to boot up.
+3. Ordered LED sequence indicates ready state.
+4. Plug in motors
+5. Two push bottons on BBB are two auton modes
+
+Shutdown Sequence:
+
+1. Disconnect motors.
+2. Hit tiny "power" button on BBB. (One press, if no shutdown in ~1 minute, hold for 10 secs.)
+3. Flip power switch.
+4. 
