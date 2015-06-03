@@ -349,8 +349,8 @@ Command::State MakeTurn::doExecute() {
   float carTurned = _car.getRelativeHeading(_initialHeading);
   float err = _turn - carTurned;
   float deltaErr = _lastErr - err;
-  const float P = (0.15f * 10.0f / 360.0f);
-  const float D = (0.2f * 10.0f / 360.0f);
+  const float P = (0.1f * 10.0f / 360.0f);
+  const float D = (0.075f * 10.0f / 360.0f);
 
   // TODO: Delete once we figure out how to get angle (the
   // statement below makes 
@@ -358,15 +358,15 @@ Command::State MakeTurn::doExecute() {
   //err = (percentTimeElapsed >= 0.5) ? 0.0 : (1.1 - percentTimeElapsed) * _turn;
 
   float steer = err * P + deltaErr * D;
-  float steerMag = abs(steer);
-  const float minMag = 0.2f;
-  if (steerMag < minMag) {
-    steer = (steer < 0) ? -minMag : minMag;
-  }
 
-  // Limit to .35 power level
-  const float maxMag = 0.30f;
+  // Limit maximum range
+  const float maxMag = 0.15f;
   steer = min(maxMag, max(-maxMag, steer));
+
+  // Then shift to minimum power level
+  // float steerMag = abs(steer);
+  const float minMag = 0.15f;
+  steer = (steer < 0) ? steer - minMag : steer + minMag;
   
   steer = Timon::rangeCheckPower(steer);
   _car.drive(steer, -steer);
