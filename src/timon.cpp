@@ -183,7 +183,7 @@ void Timon::setAutonShortWay() {
   //drive->add(new DrivePowerTime(*this, 0, .2, 1.0));
 
   // Make a left hand turn
-  drive->add(new MakeTurn(*this, -90.0));
+  drive->add(new MakeSmoothTurn(*this, -90.0));
 
   add(drive);
 }
@@ -390,6 +390,49 @@ Command::State MakeTurn::doExecute() {
 }
 
 void MakeTurn::doEnd(Command::State reason) {
+  _car.print(cout, *this) << "\n";
+}
+
+//
+// Implementation of the MakeSmoothTurn class methods
+//
+
+MakeSmoothTurn::MakeSmoothTurn(Timon& car, float turn) :
+  Command("MakeSmoothTurn", 1.0 + abs(turn) / 25),
+  _car(car),
+  _turn(turn),
+  _initialHeading(0),
+  _lastErr(0),
+  _inRangeCnt(0)
+{
+}
+
+MakeSmoothTurn::~MakeSmoothTurn() { 
+}
+
+void MakeSmoothTurn::doInitialize() {
+  _car.print(cout, *this) << "\n";
+  _initialHeading = _car.getHeading();
+  _lastErr = _turn;
+  _inRangeCnt = 0;
+}
+
+Command::State MakeSmoothTurn::doExecute() {
+  float carTurned = _car.getRelativeHeading(_initialHeading);
+
+  _car.drive(.25, .2);
+
+  // TODO: NOTE, this implementation does not take into account a minimum
+  // power to turn the car (for example, if we get within 10 degrees and
+  // drop the power too low, the car may stop turning and never reach
+  // the final target).
+
+  _car.print(cout, *this) << "  turned: " << carTurned << "\n";
+
+  return ((abs(carTurned) >= abs(_turn)) ? Command::NORMAL_END : Command::STILL_RUNNING);
+}
+
+void MakeSmoothTurn::doEnd(Command::State reason) {
   _car.print(cout, *this) << "\n";
 }
 

@@ -306,6 +306,36 @@ namespace avc {
     float _lastErr;
     int _inRangeCnt;
   };
+
+ /**
+   * Command to make a relative turn in the range of [-150.0, +150.0]
+   * degrees.
+   *
+   * <p>This command will likely "blow up" with spastic spins if you
+   * try to make too large of a turn. If you keep your turns under 150
+   * degrees in either direction and you will probably be OK.</p>
+   */
+  class MakeSmoothTurn : public Command {
+
+  public:
+
+    MakeSmoothTurn(Timon& car, float turn = 90.0);
+    ~MakeSmoothTurn();
+
+    void doInitialize();
+
+    Command::State doExecute();
+
+    void doEnd(Command::State reason);
+
+  private:
+    Timon& _car;
+    // How much to turn (in signed degrees)
+    float _turn;
+    float _initialHeading;
+    float _lastErr;
+    int _inRangeCnt;
+  };
 }
 
 #endif
