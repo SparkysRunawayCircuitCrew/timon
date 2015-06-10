@@ -183,7 +183,7 @@ void Timon::setAutonShortWay() {
   //drive->add(new DrivePowerTime(*this, 0, .2, 1.0));
 
   // Make a left hand turn
-  drive->add(new MakeSmoothTurn(*this, -90.0));
+  drive->add(new DrivePowerTime(*this, 0.2, 0.2, 4.0));
 
   add(drive);
 }
