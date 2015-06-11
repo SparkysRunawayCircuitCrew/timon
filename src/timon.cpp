@@ -237,7 +237,7 @@ void Timon::readSensors() {
   }
 
   FileData data;
-  _stanchions.read((char*)&data, sizeof(data));
+  this->_stanchionsFile.read((char*)&data, sizeof(data));
 }
 
 float Timon::getRelativeHeading(float initHeading) const {
