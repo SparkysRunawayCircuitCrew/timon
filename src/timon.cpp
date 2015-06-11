@@ -26,22 +26,6 @@ namespace {
   }
 }
 
-enum Found: int {
-    None,
-    Red,
-    Yellow,
-};
-
-struct FileData {
-    int frameCount; 
-    Found found;
-
-    int boxWidth, boxHeight;
-    int xMid, yBot;
-
-    int safetyFrameCount;
-};
-
 //
 // Main entry point into the code basically waits for user
 // to press button on BBB then runs the autonomous code
@@ -100,9 +84,9 @@ int main(int argc, const char** argv) {
       int ledState = waitCnt & 0xf;
       leds.setState(ledState);
       if (ledState == 0) {
-	waitCnt = 1;
+    waitCnt = 1;
       } else {
-	waitCnt <<= 1;
+    waitCnt <<= 1;
       }
     }
     // Save prior state
@@ -237,7 +221,20 @@ void Timon::readSensors() {
   }
 
   FileData data;
-  this->_stanchionsFile.read((char*)&data, sizeof(data));
+
+  _fileData.found = Found::None;
+  for (int i = 0; i < 2; i++) {
+      _stanchionsFile.seekg(0);
+      _stanchionsFile.read((char*)&data, sizeof(data));
+
+      if (data.frameCount == data.safetyFrameCount) {
+          _fileData = data; 
+          break;
+      }
+
+      std::cout << "Framecount mismatch: " << data.frameCount << ", " << data.safetyFrameCount << "\n";
+      Timer::sleep(0.001);
+  }
 }
 
 float Timon::getRelativeHeading(float initHeading) const {
@@ -317,7 +314,7 @@ Command::State DriveToTurn::doExecute() {
     powerCorrect = turnedMag / 180 + 0.005;
     powerCorrect = (turned > 0) ? powerCorrect : -powerCorrect;
     cout << "Off course: " << turned << " degrees, power correct: "
-	 << powerCorrect << "\n";
+     << powerCorrect << "\n";
   }
 
   float powerLeft = _power - powerCorrect;
@@ -460,7 +457,7 @@ void MakeSmoothTurn::doEnd(Command::State reason) {
 //
 
 DrivePowerTime::DrivePowerTime(Timon& car, float powerLeft, float powerRight,
-			       float howLong) :
+                   float howLong) :
   Command("DrivePowerTime", howLong + 1.0),
   _car(car),
   _powerLeft(powerLeft),

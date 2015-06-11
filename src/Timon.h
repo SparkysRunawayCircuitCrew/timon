@@ -18,6 +18,22 @@
 
 #include <fstream>
 
+enum Found: int {
+    None,
+    Red,
+    Yellow,
+};
+
+struct FileData {
+    int frameCount; 
+    Found found;
+
+    int boxWidth, boxHeight;
+    int xMid, yBot;
+
+    int safetyFrameCount;
+};
+
 namespace avc {
   /**
    * Definition of the RC car to control.
@@ -70,6 +86,9 @@ namespace avc {
     // A file handle to the stanchion data
     std::ifstream _stanchionsFile;
 
+    // Successfully read file data
+    FileData _fileData;
+    
   public:
 
     /**
