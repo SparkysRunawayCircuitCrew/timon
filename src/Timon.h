@@ -124,6 +124,13 @@ namespace avc {
         void readSensors();
 
         /**
+         * Returns whether or not the last detection resulted in a yellow stanchion
+         */
+        bool atCorner() const {
+            return _fileData.found == Found::Yellow;
+        }
+
+        /**
          * Returns the last reported heading from the gyro (from last
          * "readSensors()" invocation).
          *
@@ -252,7 +259,7 @@ namespace avc {
         std::ostream& print(std::ostream& out, const Command& cmd) const;
 
     private:
-
+        
     };
 
     /**
