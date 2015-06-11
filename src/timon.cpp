@@ -26,6 +26,22 @@ namespace {
   }
 }
 
+enum Found: int {
+    None,
+    Red,
+    Yellow,
+};
+
+struct FileData {
+    int frameCount; 
+    Found found;
+
+    int boxWidth, boxHeight;
+    int xMid, yBot;
+
+    int safetyFrameCount;
+};
+
 //
 // Main entry point into the code basically waits for user
 // to press button on BBB then runs the autonomous code
@@ -117,13 +133,13 @@ Timon::Timon() :
   _heading(0),
   _wayPoint(1),
   _crashed(false),
-  _done(false)
+  _done(false),
+  _stanchionsFile("/dev/shm/stanchions") 
 {
   if (!_gyro.reset()) {
     cerr << "**ERROR*** Failed to reset gyro\n";
     _crashed = true;
   }
-
 }
 
 void Timon::setAutonLongWay() {
@@ -219,6 +235,9 @@ void Timon::readSensors() {
     _crashed = true;
     cerr << "***ERROR*** Gyro not responding (unable to read heading)\n";
   }
+
+  FileData data;
+  _stanchions.read((char*)&data, sizeof(data));
 }
 
 float Timon::getRelativeHeading(float initHeading) const {

@@ -16,6 +16,8 @@
 
 #include "GyroBNO055.h"
 
+#include <fstream>
+
 namespace avc {
   /**
    * Definition of the RC car to control.
@@ -64,6 +66,9 @@ namespace avc {
 
     // Will be true once we've reached the final point in our drive
     bool _done;
+
+    // A file handle to the stanchion data
+    std::ifstream _stanchionsFile;
 
   public:
 
