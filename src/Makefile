@@ -57,6 +57,7 @@ $(buildDir)/$(name)::	$(oFiles)
 bin::	$(buildDir)/$(name)
 
 /usr/sbin/avc::	$(buildDir)/$(name)
+	systemctl stop avc || true;
 	install --mode=755 $(buildDir)/$(name) $(@);
 
 /etc/init.d/avc::	scripts/avc

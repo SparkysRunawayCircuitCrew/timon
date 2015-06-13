@@ -9,8 +9,8 @@ using namespace std;
 
 const float DriveStraight::DRIVE_POWER = 0.15;
 const float DriveStraight::MAX_DRIVE_POWER = DRIVE_POWER * 1.5;
-const float DriveStraight::P = 0.005;
-const float DriveStraight::D = 0.00;
+const float DriveStraight::P = 0.04;
+const float DriveStraight::D = 0.025;
 
 DriveStraight::DriveStraight(Timon& car, float heading, bool relative) :
     Command("DriveStraight", 4.0),
@@ -52,8 +52,11 @@ Command::State DriveStraight::doExecute() {
     // Compute a % adjustment to power to "correct" for turn
     float adjPower = P * angErr + D * angErrChange;
     
-    _rightPower = _rightPower * (1 + adjPower);
-    _leftPower = _leftPower * (1 - adjPower);
+    //_rightPower = _rightPower * (1 - adjPower);
+    //_leftPower = _leftPower * (1 + adjPower);
+
+    _rightPower = DRIVE_POWER * (1 - adjPower);
+    _leftPower = DRIVE_POWER * (1 + adjPower);
 
     // TODO: We should adjust power based on how far/near to the
     // side we are as well (need red stanchion info)

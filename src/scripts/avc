@@ -63,6 +63,9 @@ case "$1" in
       # Already running
       EXITSTATUS=1;
     else
+      if [ -f /var/log/${name}.log ]; then
+	  /bin/cp -f /var/log/${name}.log /var/log/${name}-prior.log
+      fi
       ${cmd} >| /var/log/${name}.log 2>&1 < /dev/null &
       pid=$!;
       echo ${pid} >| /var/run/${name}.pid;
