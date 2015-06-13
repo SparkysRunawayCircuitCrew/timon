@@ -36,6 +36,11 @@ LDFLAGS += -lBlackLib -lrt
 cppFiles = $(name).cpp Command.cpp CommandParallel.cpp CommandSequence.cpp \
 	   GyroBNO055.cpp HBridge.cpp Servo.cpp Timer.cpp UserLeds.cpp
 
+# C++ files unique to timon
+ifeq ($(name),timon)
+cppFiles += TimonDriveStraight.cpp
+endif
+
 oFiles = $(cppFiles:%.cpp=$(objDir)/%.o)
 
 # Include dependency files

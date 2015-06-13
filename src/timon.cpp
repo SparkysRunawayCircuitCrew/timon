@@ -5,6 +5,8 @@
 
 #include "CommandSequence.h"
 #include "Timon.h"
+#include "TimonDriveStraight.h"
+
 #include "UserLeds.h"
 
 #include <BlackGPIO.h>
@@ -183,7 +185,10 @@ void Timon::setAutonShortWay() {
     //drive->add(new DrivePowerTime(*this, 0, .2, 1.0));
 
     // Make a left hand turn
-    drive->add(new DriveToTurn(*this, 0.2, 10.0));
+    //    drive->add(new DriveToTurn(*this, 0.2, 10.0));
+
+    // Experiment with "driving straight" command
+    drive->add(new DriveStraight(*this, 0.0, true));
 
     add(drive);
 }
@@ -208,6 +213,11 @@ void Timon::doInitialize() {
 }
 
 void Timon::readSensors() {
+    // If process interrupted, consider car as crashed
+    if (hasBeenInterrupted) {
+	_crashed = true;
+    }
+
     float heading;
     if (_gyro.getHeading(heading)) {
         heading -= _initHeading;
