@@ -101,10 +101,10 @@ make -C src uninstall
 
 ## How to Charge the Battery
 
-1. Connect red lead of left side of charger into the +12V terminal of the Power Supply
-2. Connect black lead of left side of charger into the GND terminal of the Power Supply
-3. Connect the right charger leads to the battery, matching the colors
-4. Plug the colorful wires of the battery into the charger, into the port that fits
+1. Connect red lead of left side of charger into the +12V terminal of the Power Supply.
+2. Connect black lead of left side of charger into the GND terminal of the Power Supply.
+3. Connect the right charger leads to the battery, matching the colors.
+4. Plug the colorful wires of the battery into the charger, into the port that fits.
 5. Plug power supply into the wall to power on everything. The complete circuit diagram should look like this:
 
 ```
@@ -113,19 +113,19 @@ make -C src uninstall
    x_x
    | |         POWER SUPPLY
    | |  _________________________                             CHARGER                                  BATTERY
-   | |_|          o    o    o----|--                  ________________________                   ______________________
+   | |_|          o    o    o<---|--                  ________________________                   ______________________
    |___|         +3.3 +5   +12   | |                 |     ______________     |--------><-------|                      |
-       |   O      o--  o    o    | |                 |    |              |    |--------><-------|    I AM A BATTERY    |
+       |   O      o<-  o    o    | |                 |    |              |    |--------><-------|    I AM A BATTERY    |
        |         GND| -5   -12   | |                 |    |______________|    |                 |                      |
        |            |            | |________\/_______|                        |________\/_______|                      |
        | | | | | | ||| | | | | | |          /\       |                        |        /\       |                      |
-       |____________|____________|  ________\/_______|    (||) (v) (^) (o)    |________\/_______|                      |
+       |____________|____________|  ________\/_______|    (||) (v) (^) (O)    |________\/_______|                      |
                     |______________|        /\       |________________________|        /\       |______________________|
 ``` 
-6. Press the increment (^) button on the charger so that the word "Balance" shows up on the screen
-7. Press and hold the green Enter/Start on the charger
-8. If the screen says R: 4SER  S: 4SER you are good to go. The charger expected 4 cells in the battery and found 4 cells
-9. Press the green Enter/Start once more to start charging the battery
-10. When it is finished, the charger will beep at you
-11. Unplug Power Supply from the wall
-12. Disconnect the other stuff
+6. Press the increment `(^)` button on the charger so that the word "Balance" shows up on the screen.
+7. Press and hold the green Enter/Start button on the charger.
+8. If the screen says `R: 4SER  S: 4SER` you are good to go. This means that the charger expected 4 cells in the battery and found 4 cells.
+9. Press the green Enter/Start button once more to start charging the battery.
+10. When it is finished, the charger will beep at you to tell you that it is done.
+11. Unplug Power Supply from the wall.
+12. Disconnect the other stuff.
