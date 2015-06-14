@@ -77,7 +77,8 @@ Command::State DriveStraight::doExecute() {
 
     // If we found the yellow stanchion after driving at least 2 seconds
     // then consider ourselves at the end
-    if (_car.atCorner() && (getElapsedTime() > 2)) {
+    if (_car.atCorner() && (getElapsedTime() > 0.5)) {
+        _car.print(cout, *this) << "  FOUND YELLOW STANCHION!\n";
 	return Command::NORMAL_END;
     }
 

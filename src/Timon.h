@@ -243,16 +243,6 @@ namespace avc {
         }
 
         /**
-         * Will go true once we have detected that we've reached a corner
-         * in the course and need to make a turn (TODO - not implemented
-         * yet).
-         */
-        bool detectedCorner() {
-            // TODO - Need to figure out this from vision
-            return false;
-        }
-
-        /**
          * Dumps some information about the current state of the vehicle
          * on the course.
          */

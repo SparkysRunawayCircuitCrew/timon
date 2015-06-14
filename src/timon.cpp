@@ -190,6 +190,13 @@ void Timon::setAutonShortWay() {
     // Experiment with "driving straight" command
     drive->add(new DriveStraight(*this, 0.0, true));
 
+    // Give time to slow down
+    drive->add(new DrivePowerTime(*this, 0, 0, 2.0));
+    // Make a right hand turn
+    drive->add(new MakeTurn(*this, 90.0));
+    // Give time to slow down
+    drive->add(new DrivePowerTime(*this, 0, 0, 0.0));
+
     add(drive);
 }
 
@@ -335,9 +342,8 @@ Command::State DriveToTurn::doExecute() {
     powerRight = Timon::rangeCheckPower(powerRight);
     _car.seekDrive(powerLeft, powerRight);
 
-    bool foundCorner = _car.detectedCorner();
-    // TODO: Remove this time out override once we can detect the corner
-    foundCorner = _car.atCorner();
+    bool foundCorner = _car.atCorner();
+
     _car.print(cout, *this) << "\n";
     return (foundCorner ? Command::NORMAL_END : Command::STILL_RUNNING);
 }
