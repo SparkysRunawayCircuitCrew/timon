@@ -86,3 +86,45 @@ make -C src uninstall
 * Any output from the autonomous program (when run as a service) can
   be found in the /var/log/avc.log file. This file is cleared
   everytime you restart the service (or reboot the machine).
+
+## Startup Sequence
+1. Battery power must be connected, motors should be UNPLUGGED.
+2. Flip power switch, wait for BBB to boot up.
+3. Ordered LED sequence indicates ready state.
+4. Plug in motors
+5. Two push bottons on BBB are two auton modes
+
+## Shutdown Sequence
+1. Disconnect motors.
+2. Hit tiny "power" button on BBB. (One press, if no shutdown in ~1 minute, hold for 10 secs.)
+3. Flip power switch.
+
+## How to Charge the Battery
+
+1. Connect red lead of left side of charger into the +12V terminal of the Power Supply
+2. Connect black lead of left side of charger into the GND terminal of the Power Supply
+3. Connect the right charger leads to the battery, matching the colors
+4. Plug the colorful wires of the battery into the charger, into the port that fits
+5. Plug power supply into the wall to power on everything. The complete circuit diagram should look like this:
+
+```
+   |x|
+   x_x
+   | |
+   | |  _________________________
+   | |_|          o    o    o----|--                  _______________________                   ______________________
+   |___|         +3.3 +5   +12   | |                 |     ______________    |--------><-------|                      |
+       |   O      o--  o    o    | |                 |    |              |   |--------><-------|    I AM A BATTERY    |
+       |         GND| -5   -12   | |                 |    |______________|   |                 |                      |
+       |            |            | |________\/_______|                       |________\/_______|                      |
+       | | | | | | ||| | | | | | |          /\       |                       |        /\       |                      |
+       |____________|____________|  ________\/_______|    (||) (v) (^) (o)   |________\/_______|                      |
+                    |______________|        /\       |_______________________|        /\       |______________________|
+``` 
+6. Press the increment (^) button on the charger so that the word "Balance" shows up on the screen
+7. Press and hold the green Enter/Start on the charger
+8. If the screen says R: 4SER  S: 4SER you are good to go. The charger expected 4 cells in the battery and found 4 cells
+9. Press the green Enter/Start once more to start charging the battery
+10. When it is finished, the charger will beep at you
+11. Unplug Power Supply from the wall
+12. Disconnect the other stuff
