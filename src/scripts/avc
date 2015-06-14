@@ -17,10 +17,16 @@
 name=avc;
 cmd=/usr/sbin/${name};
 pid="";
+
+stanchionFile=/dev/shm/stanchions;
 pidFile=/var/run/${name}.pid;
 logFile=/var/log/${name}.log;
-overlay=timon-gpio
-SLOTS=/sys/devices/bone_capemgr.9/slots
+overlay=timon-gpio;
+SLOTS=/sys/devices/bone_capemgr.9/slots;
+
+cmdVis=${cmd}-vision;
+pidFileVis=/var/run/${name}-vision.pid;
+logFileVis=/var/log/${name}-vision.log;
 
 if [ ! -x ${cmd} ]; then
   exit 1;
@@ -63,12 +69,20 @@ case "$1" in
       # Already running
       EXITSTATUS=1;
     else
-      if [ -f /var/log/${name}.log ]; then
-	  /bin/cp -f /var/log/${name}.log /var/log/${name}-prior.log
+      # Initialize stanchion vision file to all zeros
+      dd if=/dev/zero of="${stanchionFile}" bs=4 count=7 &>/dev/null;
+      if [ -x ${cmdVis} ]; then
+	nice ${cmdVis} >| ${logFileVis} 2>&1 < /dev/null &
+	pid=$!;
+	echo ${pid} >| ${pidFileVis};
       fi
-      ${cmd} >| /var/log/${name}.log 2>&1 < /dev/null &
+
+      if [ -f ${logFile} ]; then
+	  /bin/cp -f ${logFile} /var/log/${name}-prior.log
+      fi
+      ${cmd} >| ${logFile} 2>&1 < /dev/null &
       pid=$!;
-      echo ${pid} >| /var/run/${name}.pid;
+      echo ${pid} >| ${pidFile};
     fi
     do_exit $EXITSTATUS;
     ;;
@@ -88,6 +102,12 @@ case "$1" in
       /bin/kill ${pid} > /dev/null 2>&1 || EXITSTATUS=1;
       /bin/rm -f ${pidFile};
     fi
+
+    if [ -f "${pidFileVis}" ]; then
+      /bin/kill $(/bin/cat ${pidFileVis}) > /dev/null 2>&1 || EXITSTATUS=1;
+      /bin/rm -f ${pidFileVis};
+    fi
+      
     do_exit "$EXITSTATUS";
     ;;
 
