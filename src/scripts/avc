@@ -18,18 +18,31 @@ name=avc;
 cmd=/usr/sbin/${name};
 pid="";
 
+avcOpts="";
+avcVisionOpts="";
+
 stanchionFile=/dev/shm/stanchions;
+confFile=/etc/${name}.conf.d/avc-service.conf
 pidFile=/var/run/${name}.pid;
-logFile=/var/log/${name}.log;
+logDir=/var/log/${name};
+logFile=${logDir}/${name}.log;
 overlay=timon-gpio;
 SLOTS=/sys/devices/bone_capemgr.9/slots;
 
+# avc-vision process related variables
 cmdVis=${cmd}-vision;
+pidVis="";
 pidFileVis=/var/run/${name}-vision.pid;
-logFileVis=/var/log/${name}-vision.log;
+logFileVis=${logDir}/${name}-vision.log;
 
-if [ ! -x ${cmd} ]; then
+# Make sure that both driving and vision programs are installed
+if [ ! -x ${cmd} ] || [ ! -x ${cmdVis} ]; then
   exit 1;
+fi
+
+# Read in configuration file overrides (if any)
+if [ -r "${confFile}" ]; then
+  . "${confFile}";
 fi
 
 EXITSTATUS=0;
@@ -45,6 +58,17 @@ get_status() {
     fi
   fi
   pid="";
+  return 1;
+}
+
+get_status_vision() {
+  if [ -f "${pidFileVis}" ]; then
+    pidVis=`cat ${pidFileVis}`;
+    if ps ${pidVis} > /dev/null 2>&1; then
+      return 0;
+    fi
+  fi
+  pidVis="";
   return 1;
 }
 
@@ -65,22 +89,28 @@ case "$1" in
       echo ${overlay} >| ${SLOTS};
     fi
 
-    if get_status; then
+    if get_status || get_status_vision; then
       # Already running
+      EXITSTATUS=1;
+    elif [ ! -d "${logDir}" ] && ! /usr/bin/install -D -m 755 -d "${logDir}"; then
+      echo "***ERROR*** Failed to create log directory: ${logDir}";
       EXITSTATUS=1;
     else
       # Initialize stanchion vision file to all zeros
-      dd if=/dev/zero of="${stanchionFile}" bs=4 count=7 &>/dev/null;
+      dd if=/dev/zero of="${stanchionFile}" bs=4 count=7 >/dev/null 2>/dev/null;
       if [ -x ${cmdVis} ]; then
-	nice ${cmdVis} >| ${logFileVis} 2>&1 < /dev/null &
+	if [ -f ${logFileVis} ]; then
+	  /bin/mv -f ${logFileVis} ${logDir}/${name}-vision-prior.log
+        fi
+	nice ${cmdVis} ${avcVisionOpts} >| ${logFileVis} 2>&1 < /dev/null &
 	pid=$!;
 	echo ${pid} >| ${pidFileVis};
       fi
 
       if [ -f ${logFile} ]; then
-	  /bin/cp -f ${logFile} /var/log/${name}-prior.log
+	/bin/mv -f ${logFile} ${logDir}/${name}-prior.log
       fi
-      ${cmd} >| ${logFile} 2>&1 < /dev/null &
+      ${cmd} ${avcOpts} >| ${logFile} 2>&1 < /dev/null &
       pid=$!;
       echo ${pid} >| ${pidFile};
     fi
@@ -88,25 +118,34 @@ case "$1" in
     ;;
 
   status)
+    EXITSTATUS=0;
     if get_status; then
       echo "${name} is running (PID: ${pid})";
-      exit 0;
+    else
+      echo "${name} is not running";
+      EXITSTATUS=1;
     fi
-    echo "${name} is not running";
-    exit 1;
+    if get_status_vision; then
+      echo "${name}-vision is running (PID: ${pidVis})";
+    else
+      echo "${name}-vision is not running";
+      EXITSTATUS=1;
+    fi
+    exit $EXITSTATUS;
     ;;
 
   stop)
     echo -n "Shutting down ${cmd} (Autonomous Vehicle) ... ";
     if get_status; then
       /bin/kill ${pid} > /dev/null 2>&1 || EXITSTATUS=1;
-      /bin/rm -f ${pidFile};
     fi
 
-    if [ -f "${pidFileVis}" ]; then
-      /bin/kill $(/bin/cat ${pidFileVis}) > /dev/null 2>&1 || EXITSTATUS=1;
-      /bin/rm -f ${pidFileVis};
+    if get_status_vision; then
+      /bin/kill ${pidVis} > /dev/null 2>&1 || EXITSTATUS=1;
     fi
+
+    # Clean up pid files
+    /bin/rm -f ${pidFile} ${pidFileVis};
       
     do_exit "$EXITSTATUS";
     ;;

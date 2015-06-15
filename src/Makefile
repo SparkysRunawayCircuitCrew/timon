@@ -66,11 +66,14 @@ bin::	$(buildDir)/$(name)
 	chkconfig --list avc;
 	systemctl daemon-reload
 
-install::	/usr/sbin/avc /etc/init.d/avc
+/etc/avc.conf.d/avc-service.conf::
+	[ -f $(@) ] || install -D --mode=644 scripts/avc-service.conf $(@);
+
+install::	/usr/sbin/avc /etc/init.d/avc /etc/avc.conf.d/avc-service.conf;
 
 uninstall::
 	@chkconfig avc off || true;
-	rm -f /usr/sbin/avc /etc/init.d/avc;
+	rm -f /usr/sbin/avc /etc/init.d/avc /etc/avc.conf.d/avc-service.conf;
 	systemctl daemon-reload
 
 clean::
