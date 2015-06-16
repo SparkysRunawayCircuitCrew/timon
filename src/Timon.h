@@ -32,6 +32,12 @@ struct FileData {
     int xMid, yBot;
 
     int safetyFrameCount;
+
+    // Zeros contents (which results in Found::None)
+    void clear() { memset((char*) this, 0, sizeof(FileData)); }
+
+    // Let constructor clear contents
+    FileData() { clear(); }
 };
 
 namespace avc {
@@ -86,9 +92,17 @@ namespace avc {
         // A file handle to the stanchion data
         std::ifstream _stanchionsFile;
 
-        // Successfully read file data
+	// Frame ID on vision record of last time we saw a stanchion
+	int _lastStanchionFrame;
+	// Timer used to track how long it's been since we've seen a stanchion
+	Timer _lastStanchionTimer;
+
+        // Vision information record read from avc-vision file
         FileData _fileData;
-    
+
+        // Previous vision information record (in case you want to compare)
+        FileData _fileDataPrev;
+
     public:
 
         /**

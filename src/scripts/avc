@@ -35,6 +35,8 @@ pidVis="";
 pidFileVis=/var/run/${name}-vision.pid;
 logFileVis=${logDir}/${name}-vision.log;
 
+avcVisionImageDir=${logDir}/images;
+
 # Make sure that both driving and vision programs are installed
 if [ ! -x ${cmd} ] || [ ! -x ${cmdVis} ]; then
   exit 1;
@@ -93,7 +95,12 @@ case "$1" in
       # Already running
       EXITSTATUS=1;
     elif [ ! -d "${logDir}" ] && ! /usr/bin/install -D -m 755 -d "${logDir}"; then
+      echo
       echo "***ERROR*** Failed to create log directory: ${logDir}";
+      EXITSTATUS=1;
+    elif [ ! -d "${avcVisionImageDir}" ] && ! /usr/bin/install -D -m 755 -d "${avcVisionImageDir}"; then
+      echo
+      echo "***ERROR*** Failed to create image output directory: ${avcVisionImageDir}";
       EXITSTATUS=1;
     else
       # Initialize stanchion vision file to all zeros

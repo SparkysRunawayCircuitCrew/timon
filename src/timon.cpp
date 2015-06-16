@@ -120,7 +120,11 @@ Timon::Timon() :
     _wayPoint(1),
     _crashed(false),
     _done(false),
-    _stanchionsFile("/dev/shm/stanchions") 
+    _stanchionsFile("/dev/shm/stanchions"),
+    _lastStanchionFrame(0),
+    _lastStanchionTimer(),
+    _fileData(),
+    _fileDataPrev()
 {
     if (!_gyro.reset()) {
         cerr << "**ERROR*** Failed to reset gyro\n";
@@ -211,6 +215,14 @@ void Timon::doInitialize() {
     _crashed = _done = false;
     _wayPoint = 1;
 
+    // Used to keep track of how long since we've seen a stanchion
+    _lastStanchionTimer.start();
+    _lastStanchionFrame = 0;
+
+    // Clear vision record (0 values and set found to None)
+    _fileData.clear();
+    _fileDataPrev.clear();
+
     if (!_gyro.getHeading(_initHeading)) {
         _crashed = true;
         cerr << "***ERROR*** Gyro not responding (unable to read heading)\n";
@@ -237,20 +249,56 @@ void Timon::readSensors() {
         cerr << "***ERROR*** Gyro not responding (unable to read heading)\n";
     }
 
+    //
+    // Try to read in current vision status from sensors
+    //
     FileData data;
 
-    _fileData.found = Found::None;
+    bool fileOk = false;
+
     for (int i = 0; i < 2; i++) {
         _stanchionsFile.seekg(0);
         _stanchionsFile.read((char*)&data, sizeof(data));
 
         if (data.frameCount == data.safetyFrameCount) {
-            _fileData = data; 
+	    // If this is a new frame, store previous info
+	    if (_fileData.frameCount != data.frameCount) {
+		_fileDataPrev = _fileData;
+	    }
+	    _fileData = data;
+	    fileOk = true;
             break;
         }
 
-        std::cout << "Framecount mismatch: " << data.frameCount << ", " << data.safetyFrameCount << "\n";
+        cerr << "WARNING: Framecount mismatch: " << data.frameCount
+	     << ", " << data.safetyFrameCount << "\n";
         Timer::sleep(0.001);
+    }
+
+    if (fileOk == false) {
+	_fileData.found = Found::None;
+	_crashed = true;
+	cerr << "***ERROR*** Failed to read valid record from stanchion file\n";
+    }
+
+    //
+    // Check how long it's been since we've had a new image of a stanchion
+    //
+    if ((_fileData.found != Found::None) &&
+	(_fileData.frameCount != _lastStanchionFrame)) {
+	_lastStanchionFrame = _fileData.frameCount;
+	_lastStanchionTimer.start();
+    } else {
+	float maxTimeToWait = 2.0;
+
+	if (_lastStanchionTimer.secsElapsed() > maxTimeToWait) {
+	    _crashed = true;
+	    cerr << "***ERROR*** Failed to find a stanchion in last "
+		 << maxTimeToWait << " seconds (frames: "
+		 << _fileData.frameCount
+		 << " last stanchion frame: " << _lastStanchionFrame
+		 << "\n";
+	}
     }
 }
 
@@ -384,11 +432,6 @@ Command::State MakeTurn::doExecute() {
     const float P = (0.1f * 10.0f / 360.0f);
     const float D = (0.075f * 10.0f / 360.0f);
 
-    // TODO: Delete once we figure out how to get angle (the
-    // statement below makes 
-    //float percentTimeElapsed = getElapsedTime() / getTimeout();
-    //err = (percentTimeElapsed >= 0.5) ? 0.0 : (1.1 - percentTimeElapsed) * _turn;
-
     float steer = err * P + deltaErr * D;
 
     // Limit maximum range
@@ -453,11 +496,6 @@ Command::State MakeSmoothTurn::doExecute() {
     float carTurned = _car.getRelativeHeading(_initialHeading);
 
     _car.drive(.25, .2);
-
-    // TODO: NOTE, this implementation does not take into account a minimum
-    // power to turn the car (for example, if we get within 10 degrees and
-    // drop the power too low, the car may stop turning and never reach
-    // the final target).
 
     _car.print(cout, *this) << "  turned: " << carTurned << "\n";
 

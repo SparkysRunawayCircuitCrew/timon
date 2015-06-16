@@ -13,7 +13,7 @@ const float DriveStraight::P = 0.04;
 const float DriveStraight::D = 0.025;
 
 DriveStraight::DriveStraight(Timon& car, float heading, bool relative) :
-    Command("DriveStraight", 4.0),
+    Command("DriveStraight", 8.0),
     _car(car),
     _heading(heading),
     _desiredHeading(heading),
