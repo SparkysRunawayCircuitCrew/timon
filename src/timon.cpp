@@ -297,7 +297,7 @@ void Timon::readSensors() {
 		 << maxTimeToWait << " seconds (frames: "
 		 << _fileData.frameCount
 		 << " last stanchion frame: " << _lastStanchionFrame
-		 << "\n";
+		 << ")\n";
 	}
     }
 }
