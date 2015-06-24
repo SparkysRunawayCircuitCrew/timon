@@ -232,6 +232,8 @@ void Timon::doInitialize() {
 }
 
 void Timon::readSensors() {
+    int ledsState = 0;
+
     // If process interrupted, consider car as crashed
     if (hasBeenInterrupted) {
 	_crashed = true;
@@ -300,6 +302,21 @@ void Timon::readSensors() {
 		 << ")\n";
 	}
     }
+
+    if (_fileData.found == Found::Yellow) {
+	// Light 4th LED if yellow found (next to Ethernet)
+	ledsState |= 0x8;
+    } else if (_fileData.found == Found::Red) {
+	// Light 3rd LED if red found
+	ledsState |= 0x4;
+    }
+    if ((_fileData.boxHeight >= 80) && (_fileData.boxHeight <= 120)) {
+	// Light 1st LED if last height was within range
+	ledsState |= 0x1;
+    }
+
+    UserLeds& leds = UserLeds::getInstance();
+    leds.setState(ledsState);
 }
 
 float Timon::getRelativeHeading(float initHeading) const {
@@ -337,8 +354,9 @@ void Timon::disable() {
 }
 
 void Timon::nextWaypoint() {
-    UserLeds& leds = UserLeds::getInstance();
-    leds.setState(_wayPoint++);
+    // Let's use leds for reporting status now
+    //    UserLeds& leds = UserLeds::getInstance();
+    //    leds.setState(_wayPoint++);
 }
 
 float Timon::rangeCheckPower(float power) {
