@@ -16,12 +16,12 @@ namespace avc {
     ~CommandSequence();
 
     void add(Command* command);
+    std::ostream& print(std::ostream& out) const;
 
   protected:
     void doInitialize();
     State doExecute();
     void doEnd(State reason);
-    std::ostream& print(std::ostream& out) const;
 
   private:
     std::vector<Command*> _commands;

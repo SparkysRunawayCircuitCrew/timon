@@ -30,7 +30,7 @@ DriveStraight::~DriveStraight() {
 }
 
 void DriveStraight::doInitialize() {
-    if (_relative) {
+  if (_relative) {
 	_desiredHeading = _car.getHeading() + _heading;
 	if (_desiredHeading > 360.0) {
 	    _desiredHeading -= 360.0;
@@ -75,7 +75,7 @@ Command::State DriveStraight::doExecute() {
 
     _lastAngErr = angErr;
 
-    // If we found the yellow stanchion after driving at least 2 seconds
+    // If we found the yellow stanchion after driving at least 0.5 seconds
     // then consider ourselves at the end
     if (_car.atCorner() && (getElapsedTime() > 0.5)) {
         _car.print(cout, *this) << "  FOUND YELLOW STANCHION!\n";

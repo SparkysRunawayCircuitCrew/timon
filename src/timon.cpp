@@ -195,11 +195,15 @@ void Timon::setAutonShortWay() {
     drive->add(new DriveStraight(*this, 0.0, true));
 
     // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, 2.0));
+    drive->add(new DrivePowerTime(*this, 0.1, 0.1, 10.0));
+
     // Make a right hand turn
     drive->add(new MakeTurn(*this, 90.0));
+
     // Give time to slow down
     drive->add(new DrivePowerTime(*this, 0, 0, 0.0));
+
+    drive->print(cout);
 
     add(drive);
 }
@@ -291,7 +295,8 @@ void Timon::readSensors() {
 	_lastStanchionFrame = _fileData.frameCount;
 	_lastStanchionTimer.start();
     } else {
-	float maxTimeToWait = 2.0;
+	//float maxTimeToWait = 2.0;
+	float maxTimeToWait = 10.0;
 
 	if (_lastStanchionTimer.secsElapsed() > maxTimeToWait) {
 	    _crashed = true;
@@ -365,7 +370,7 @@ float Timon::rangeCheckPower(float power) {
 
 ostream& Timon::print(std::ostream& out, const Command& cmd) const {
     out << cmd << "  Timon(left=" << _left.get() << ", right="
-        << _right.get() << ", heading=" << _heading << ")";
+        << _right.get() << ", heading=" << _heading << ", found=" << _fileData.found << ", box_height=" << _fileData.boxHeight << ")";
     return out;
 }
 
@@ -437,7 +442,7 @@ MakeTurn::~MakeTurn() {
 }
 
 void MakeTurn::doInitialize() {
-    _car.print(cout, *this) << "\n";
+    _car.print(cout, *this) << "MAKING TURN\n";
     _initialHeading = _car.getHeading();
     _lastErr = _turn;
     _inRangeCnt = 0;
