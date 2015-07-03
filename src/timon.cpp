@@ -135,45 +135,32 @@ Timon::Timon() :
 
 void Timon::setAutonLongWay() {
     clear();
-    const float drivePow = 0.2;
-    const float stopSecs = 2.0;
-
-    // Max seconds to drive on short and long sides
-    const float shortSide = 2.0;
-    const float longSide = 3.0;
 
     CommandSequence* drive = new CommandSequence("Drive");
+
     // Give .25 seconds to let user move hand away
     drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
-    // Short drive to first corner
-    drive->add(new DriveToTurn(*this, drivePow, shortSide / 2));
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
-    // Make a right hand turn
-    drive->add(new MakeTurn(*this, 90.0));
-    // Long drive to second corner
-    drive->add(new DriveToTurn(*this, drivePow, longSide));
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
-    // Make a right hand turn
-    drive->add(new MakeTurn(*this, 90.0));
-    // Medium drive to third corner
-    drive->add(new DriveToTurn(*this, drivePow, shortSide));
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
-    // Make a right hand turn
-    drive->add(new MakeTurn(*this, 90.0));
-    // Long drive to fourth corner
-    drive->add(new DriveToTurn(*this, drivePow, longSide));
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, stopSecs));
-    // Make a right hand turn
-    drive->add(new MakeTurn(*this, 90.0));
-    // Short drive to finish line (and a bit more to cross it)
-    drive->add(new DriveToTurn(*this, drivePow, shortSide / 2 + shortSide / 10));
-    // And stop (NOTE: this is optional now as the Timon class should
-    // automatically disable everything after finishing an auton run)
-    drive->add(DrivePowerTime::createStopCommand(*this));
+
+    // How many turns to make
+    const float numberOfTurns = 2;
+    int absAng = 0;
+
+    for (int i = 0; i < numberOfTurns; i++) {
+	// Experiment with "driving straight" command
+	// (trusting gyro for entire circuit)
+	drive->add(new DriveStraight(*this, absAng, 3.0, false));
+	absAng += 90;
+	absAng %= 360;
+
+	// Make a right hand turn
+	drive->add(new MakeTurn(*this, 90.0));
+    }
+
+    // Paranoid motor shut down (should be automatic)
+    drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
+
+    drive->print(cout);
+
     add(drive);
 }
 
