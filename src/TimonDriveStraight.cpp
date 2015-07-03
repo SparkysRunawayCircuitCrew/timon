@@ -12,7 +12,7 @@ const float DriveStraight::MAX_DRIVE_POWER = DRIVE_POWER * 1.5;
 const float DriveStraight::P = 0.04;
 const float DriveStraight::D = 0.025;
 
-DriveStraight::DriveStraight(Timon& car, float heading, bool relative) :
+DriveStraight::DriveStraight(Timon& car, float heading, float minTime, bool relative) :
     Command("DriveStraight", 8.0),
     _car(car),
     _heading(heading),
@@ -20,6 +20,7 @@ DriveStraight::DriveStraight(Timon& car, float heading, bool relative) :
     _leftPower(0),
     _rightPower(0),
     _lastAngErr(0),
+    _minTimeToDrive(minTime),
     _relative(relative)
 {
 
@@ -46,7 +47,9 @@ void DriveStraight::doInitialize() {
 
 Command::State DriveStraight::doExecute() {
     float curHeading = _car.getHeading();
-    float angErr = computeAngDiff(_desiredHeading, curHeading);
+    float headingCorrection = 0; // TODO use red stanchions to correct car
+
+    float angErr = computeAngDiff(_desiredHeading + headingCorrection, curHeading);
     float angErrChange = angErr - _lastAngErr;
 
     // Compute a % adjustment to power to "correct" for turn
@@ -77,7 +80,7 @@ Command::State DriveStraight::doExecute() {
 
     // If we found the yellow stanchion after driving at least 0.5 seconds
     // then consider ourselves at the end
-    if (_car.atCorner() && (getElapsedTime() > 0.5)) {
+    if (_car.atCorner() && (getElapsedTime() > _minTimeToDrive)) {
         _car.print(cout, *this) << "  FOUND YELLOW STANCHION!\n";
 	return Command::NORMAL_END;
     }

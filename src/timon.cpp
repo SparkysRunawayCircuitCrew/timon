@@ -124,7 +124,8 @@ Timon::Timon() :
     _lastStanchionFrame(0),
     _lastStanchionTimer(),
     _fileData(),
-    _fileDataPrev()
+    _fileDataPrev(),
+    inTurn(false)
 {
     if (!_gyro.reset()) {
         cerr << "**ERROR*** Failed to reset gyro\n";
@@ -190,18 +191,15 @@ void Timon::setAutonShortWay() {
 
     // Make a left hand turn
     //    drive->add(new DriveToTurn(*this, 0.2, 10.0));
+    const float numberOfTurns = 2;
 
-    // Experiment with "driving straight" command
-    drive->add(new DriveStraight(*this, 0.0, true));
+    for (int i = 0; i < numberOfTurns; i++) {
+	    // Experiment with "driving straight" command
+	    drive->add(new DriveStraight(*this, 0.0, 3.0, true));
 
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0.1, 0.1, 10.0));
-
-    // Make a right hand turn
-    drive->add(new MakeTurn(*this, 90.0));
-
-    // Give time to slow down
-    drive->add(new DrivePowerTime(*this, 0, 0, 0.0));
+	    // Make a right hand turn
+	    drive->add(new MakeTurn(*this, 90.0));
+    }
 
     drive->print(cout);
 
@@ -241,6 +239,7 @@ void Timon::readSensors() {
     // If process interrupted, consider car as crashed
     if (hasBeenInterrupted) {
 	_crashed = true;
+	cerr << "***ERROR*** Interrupted process\n";
     }
 
     float heading;
@@ -296,9 +295,9 @@ void Timon::readSensors() {
 	_lastStanchionTimer.start();
     } else {
 	//float maxTimeToWait = 2.0;
-	float maxTimeToWait = 10.0;
+	const float maxTimeToWait = 3.0;
 
-	if (_lastStanchionTimer.secsElapsed() > maxTimeToWait) {
+	if ( (_lastStanchionTimer.secsElapsed() > maxTimeToWait) && !inTurn) {
 	    _crashed = true;
 	    cerr << "***ERROR*** Failed to find a stanchion in last "
 		 << maxTimeToWait << " seconds (frames: "
@@ -369,8 +368,11 @@ float Timon::rangeCheckPower(float power) {
 }
 
 ostream& Timon::print(std::ostream& out, const Command& cmd) const {
-    out << cmd << "  Timon(left=" << _left.get() << ", right="
-        << _right.get() << ", heading=" << _heading << ", found=" << _fileData.found << ", box_height=" << _fileData.boxHeight << ")";
+    out << cmd << "  Timon(left=" << _left.get() 
+	<< ", right=" << _right.get() << ", heading=" << _heading 
+	<< ", frameCount=" << _fileData.frameCount 
+	<< ", found=" << _fileData.found << ", box_height=" << _fileData.boxHeight 
+	<< ", inTurn=" << inTurn << ")";
     return out;
 }
 
@@ -443,6 +445,8 @@ MakeTurn::~MakeTurn() {
 
 void MakeTurn::doInitialize() {
     _car.print(cout, *this) << "MAKING TURN\n";
+    _car.inTurn = true;
+
     _initialHeading = _car.getHeading();
     _lastErr = _turn;
     _inRangeCnt = 0;
@@ -489,6 +493,7 @@ Command::State MakeTurn::doExecute() {
 
 void MakeTurn::doEnd(Command::State reason) {
     _car.print(cout, *this) << "\n";
+    _car.inTurn = false;
 }
 
 //
@@ -551,7 +556,7 @@ Command::State DrivePowerTime::doExecute() {
         return Command::NORMAL_END;
     }
 
-    _car.seekDrive(_powerLeft, _powerRight);
+    _car.drive(_powerLeft, _powerRight);
     return Command::STILL_RUNNING;
 }
 

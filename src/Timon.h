@@ -144,6 +144,9 @@ namespace avc {
             return _fileData.found == Found::Yellow;
         }
 
+	// Will be true if robot is in the middle of a turn
+	bool inTurn;
+
         /**
          * Returns the last reported heading from the gyro (from last
          * "readSensors()" invocation).

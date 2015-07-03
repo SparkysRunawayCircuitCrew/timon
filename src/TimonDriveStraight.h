@@ -30,7 +30,7 @@ namespace avc {
 	 * @param relative Is the heading relative (true) to the
 	 * current heading, or is an absolute (false) gyro heading.
 	 */
-	DriveStraight(Timon& car, float heading, bool relative);
+	DriveStraight(Timon& car, float heading, float minTimeToDrive, bool relative);
 
         ~DriveStraight();
 
@@ -66,6 +66,7 @@ namespace avc {
 	float _leftPower;
 	float _rightPower;
         float _lastAngErr;
+	float _minTimeToDrive;
 	bool _relative;
     };
 }
