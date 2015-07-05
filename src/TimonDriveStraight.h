@@ -51,6 +51,9 @@ namespace avc {
 	    return diff;
 	}
 
+	int getRedCount() const { return _car.getCounter(Found::Red) - _initialRed; }
+	int getYellowCount() const { return _car.getCounter(Found::Yellow) - _initialYellow; }
+
 	// Constant values
 	static const float DRIVE_POWER;
 	static const float MAX_DRIVE_POWER;
@@ -68,6 +71,9 @@ namespace avc {
         float _lastAngErr;
 	float _minTimeToDrive;
 	bool _relative;
+
+	int _initialRed;
+	int _initialYellow;
     };
 }
 

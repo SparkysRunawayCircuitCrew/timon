@@ -83,8 +83,14 @@ namespace avc {
         // Used to count how far we've progressed
         int _wayPoint;
 
+	// Used to store stanchions counts
+	int _stanchionCounts[3];
+
         // Will be true if something terrible happens
         bool _crashed;
+
+	// Will be true if in turn
+	bool _inTurn;
 
         // Will be true once we've reached the final point in our drive
         bool _done;
@@ -137,6 +143,11 @@ namespace avc {
          */
         void readSensors();
 
+	/**
+	 * Gets the specified counter
+	 */
+	int getCounter(Found counter) const { return _stanchionCounts[counter]; }
+
         /**
          * Returns whether or not the last detection resulted in a yellow stanchion
          */
@@ -144,8 +155,8 @@ namespace avc {
             return _fileData.found == Found::Yellow;
         }
 
-	// Will be true if robot is in the middle of a turn
-	bool inTurn;
+	void enterTurn() { _inTurn = true; }
+	void exitTurn();
 
         /**
          * Returns the last reported heading from the gyro (from last
@@ -342,6 +353,7 @@ namespace avc {
         float _turn;
         float _initialHeading;
         float _lastErr;
+	float _lastCarTurned;
         int _inRangeCnt;
     };
 

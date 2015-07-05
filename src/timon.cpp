@@ -125,7 +125,7 @@ Timon::Timon() :
     _lastStanchionTimer(),
     _fileData(),
     _fileDataPrev(),
-    inTurn(false)
+    _inTurn(false)
 {
     if (!_gyro.reset()) {
         cerr << "**ERROR*** Failed to reset gyro\n";
@@ -141,23 +141,18 @@ void Timon::setAutonLongWay() {
     // Give .25 seconds to let user move hand away
     drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
 
+
+    drive->add(new DrivePowerTime(*this, 0.2, 0.2, 5.0));
+    /*
     // How many turns to make
     const float numberOfTurns = 2;
-    int absAng = 0;
 
     for (int i = 0; i < numberOfTurns; i++) {
-	// Experiment with "driving straight" command
-	// (trusting gyro for entire circuit)
-	drive->add(new DriveStraight(*this, absAng, 3.0, false));
-	absAng += 90;
-	absAng %= 360;
-
 	// Make a right hand turn
 	drive->add(new MakeTurn(*this, 90.0));
     }
-
+    */
     // Paranoid motor shut down (should be automatic)
-    drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
 
     drive->print(cout);
 
@@ -178,11 +173,11 @@ void Timon::setAutonShortWay() {
 
     // Make a left hand turn
     //    drive->add(new DriveToTurn(*this, 0.2, 10.0));
-    const float numberOfTurns = 2;
+    const float numberOfTurns = 3;
 
     for (int i = 0; i < numberOfTurns; i++) {
 	    // Experiment with "driving straight" command
-	    drive->add(new DriveStraight(*this, 0.0, 3.0, true));
+	    drive->add(new DriveStraight(*this, 0.0, 4.0, true));
 
 	    // Make a right hand turn
 	    drive->add(new MakeTurn(*this, 90.0));
@@ -211,6 +206,8 @@ void Timon::doInitialize() {
     // Clear vision record (0 values and set found to None)
     _fileData.clear();
     _fileDataPrev.clear();
+
+    memset(_stanchionCounts, 0, sizeof(_stanchionCounts));
 
     if (!_gyro.getHeading(_initHeading)) {
         _crashed = true;
@@ -256,6 +253,10 @@ void Timon::readSensors() {
 	    // If this is a new frame, store previous info
 	    if (_fileData.frameCount != data.frameCount) {
 		_fileDataPrev = _fileData;
+
+	    	if (data.found != _fileDataPrev.found) {
+		    _stanchionCounts[_fileData.found]++;
+	    	}
 	    }
 	    _fileData = data;
 	    fileOk = true;
@@ -282,9 +283,9 @@ void Timon::readSensors() {
 	_lastStanchionTimer.start();
     } else {
 	//float maxTimeToWait = 2.0;
-	const float maxTimeToWait = 3.0;
+	const float maxTimeToWait = 5.0;
 
-	if ( (_lastStanchionTimer.secsElapsed() > maxTimeToWait) && !inTurn) {
+	if ( !_inTurn && (_lastStanchionTimer.secsElapsed() > maxTimeToWait) ) {
 	    _crashed = true;
 	    cerr << "***ERROR*** Failed to find a stanchion in last "
 		 << maxTimeToWait << " seconds (frames: "
@@ -308,6 +309,11 @@ void Timon::readSensors() {
 
     UserLeds& leds = UserLeds::getInstance();
     leds.setState(ledsState);
+}
+
+void Timon::exitTurn() {
+	_inTurn = false;
+	_lastStanchionTimer.start();
 }
 
 float Timon::getRelativeHeading(float initHeading) const {
@@ -359,7 +365,7 @@ ostream& Timon::print(std::ostream& out, const Command& cmd) const {
 	<< ", right=" << _right.get() << ", heading=" << _heading 
 	<< ", frameCount=" << _fileData.frameCount 
 	<< ", found=" << _fileData.found << ", box_height=" << _fileData.boxHeight 
-	<< ", inTurn=" << inTurn << ")";
+	<< ", inTurn=" << _inTurn << ")";
     return out;
 }
 
@@ -423,6 +429,7 @@ MakeTurn::MakeTurn(Timon& car, float turn) :
     _turn(turn),
     _initialHeading(0),
     _lastErr(0),
+    _lastCarTurned(0),
     _inRangeCnt(0)
 {
 }
@@ -432,7 +439,7 @@ MakeTurn::~MakeTurn() {
 
 void MakeTurn::doInitialize() {
     _car.print(cout, *this) << "MAKING TURN\n";
-    _car.inTurn = true;
+    _car.enterTurn();
 
     _initialHeading = _car.getHeading();
     _lastErr = _turn;
@@ -443,19 +450,31 @@ Command::State MakeTurn::doExecute() {
     float carTurned = _car.getRelativeHeading(_initialHeading);
     float err = _turn - carTurned;
     float deltaErr = _lastErr - err;
-    const float P = (0.1f * 10.0f / 360.0f);
-    const float D = (0.075f * 10.0f / 360.0f);
+    const float P = (0.15f * 10.0f / 360.0f);
+    //const float D = (0.1f * 10.0f / 360.0f);
+    const float D = 0.0f;
 
     float steer = err * P + deltaErr * D;
 
     // Limit maximum range
-    const float maxMag = 0.15f;
+    const float maxMag = 0.35f;
     steer = min(maxMag, max(-maxMag, steer));
 
     // Then shift to minimum power level
     // float steerMag = abs(steer);
-    const float minMag = 0.15f;
-    steer = (steer < 0) ? steer - minMag : steer + minMag;
+    //const float minMag = 0.15f;
+    //steer = (steer < 0) ? steer - minMag : steer + minMag;
+    
+    const float baseMinMag = 0.15f;
+
+    float minMag = baseMinMag;
+    if (abs(carTurned - _lastCarTurned) < 0.4) {
+	minMag = maxMag;
+    } 
+    
+    if (steer > -minMag && steer < minMag) {
+	steer = (steer < 0) ? -minMag : minMag;
+    }
   
     steer = Timon::rangeCheckPower(steer);
     _car.drive(steer, -steer);
@@ -470,17 +489,19 @@ Command::State MakeTurn::doExecute() {
     _lastErr = err;
 
     // Done if within 3 degrees
-    if (abs(err) < 3.0) {
+    if (abs(err) < 5.0) {
         _inRangeCnt++;
     } else {
         _inRangeCnt = 0;
     }
+
+    _lastCarTurned = carTurned;
     return ((_inRangeCnt >= 3) ? Command::NORMAL_END : Command::STILL_RUNNING);
 }
 
 void MakeTurn::doEnd(Command::State reason) {
     _car.print(cout, *this) << "\n";
-    _car.inTurn = false;
+    _car.exitTurn();
 }
 
 //
@@ -544,6 +565,8 @@ Command::State DrivePowerTime::doExecute() {
     }
 
     _car.drive(_powerLeft, _powerRight);
+    _car.print(cout, *this);
+
     return Command::STILL_RUNNING;
 }
 

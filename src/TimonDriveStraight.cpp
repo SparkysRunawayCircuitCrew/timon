@@ -13,7 +13,7 @@ const float DriveStraight::P = 0.04;
 const float DriveStraight::D = 0.025;
 
 DriveStraight::DriveStraight(Timon& car, float heading, float minTime, bool relative) :
-    Command("DriveStraight", 8.0),
+    Command("DriveStraight", 3600),
     _car(car),
     _heading(heading),
     _desiredHeading(heading),
@@ -43,9 +43,14 @@ void DriveStraight::doInitialize() {
     _lastAngErr = 0;
     
     _rightPower = _leftPower = DRIVE_POWER;
+
+    _initialRed = _car.getCounter(Found::Red);
+    _initialYellow = _car.getCounter(Found::Yellow);
 }
 
 Command::State DriveStraight::doExecute() {
+    const float targetHeight = 0;
+
     float curHeading = _car.getHeading();
     float headingCorrection = 0; // TODO use red stanchions to correct car
 
@@ -72,15 +77,19 @@ Command::State DriveStraight::doExecute() {
 			    << "  heading: " << curHeading
 			    << "  angErr: " << angErr
 			    << "  left: " << _leftPower
-			    << "  right: " << _rightPower << "\n";
+			    << "  right: " << _rightPower
+                            << "  redCnt: " << getRedCount()
+                            << "  yelCnt: " << getYellowCount()
+                            << "\n";
 
     _car.drive(_leftPower, _rightPower);
 
     _lastAngErr = angErr;
 
-    // If we found the yellow stanchion after driving at least 0.5 seconds
-    // then consider ourselves at the end
-    if (_car.atCorner() && (getElapsedTime() > _minTimeToDrive)) {
+    if (getElapsedTime() < _minTimeToDrive) {
+	_initialRed = _car.getCounter(Found::Red);
+	_initialYellow = _car.getCounter(Found::Yellow);
+    } else if (getYellowCount() >= 1 && getRedCount() >= 1) {
         _car.print(cout, *this) << "  FOUND YELLOW STANCHION!\n";
 	return Command::NORMAL_END;
     }
