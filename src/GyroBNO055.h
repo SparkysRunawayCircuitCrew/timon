@@ -85,6 +85,11 @@ namespace avc {
      */
     bool reset();
 
+	/**
+	 * Gets data from the gyroscope
+	 */
+	bool update();
+
     /**
      * Get the current heading of the gyro (which way you are facing).
      *
@@ -101,7 +106,12 @@ namespace avc {
     std::ostream& dumpInfo(std::ostream& out) const;
 
   private:
+  // The total length of all of the gyro's data
+    const static uint8_t dataLen = 0x18;
+
     BlackLib::BlackI2C i2cGyro;
+
+	uint16_t rawData[dataLen / 2];
   };
 
 }

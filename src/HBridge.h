@@ -71,6 +71,16 @@ namespace avc {
      */
     bool seek(float val, float maxStep);
 
+	/**
+	 * Brakes the motors
+	 */
+	void brake();
+
+	/**
+	 * Releases the brake
+	 */
+	void releaseBrake();
+
     /**
      * Returns true if motor is being controlled, false otherwise.
      */

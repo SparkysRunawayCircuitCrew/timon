@@ -82,6 +82,16 @@ bool HBridge::seek(float newVal, float maxStep) {
   return set(newVal);
 }
 
+void HBridge::brake() {
+  gpioFwd->setValue(BlackLib::high);
+  gpioRev->setValue(BlackLib::high);
+}
+
+void HBridge::releaseBrake() {
+  gpioFwd->setValue(BlackLib::low);
+  gpioRev->setValue(BlackLib::low);
+}
+
 void HBridge::disable() {
   enabled = false;
   curVal = 0.0;

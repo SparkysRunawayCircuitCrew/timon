@@ -38,6 +38,9 @@ namespace {
   // 9 DOF mode plus absolute angles
   const uint8_t ndofMode = 0x0C;
 
+  // The beginning of the accel data
+  const uint8_t accAddr = 0x08;
+
   // The 6 bytes containing the euler values (pitch, roll and heading) 
   const uint8_t eulerAddr = 0x1a;
 
@@ -136,12 +139,38 @@ bool GyroBNO055::reset() {
   return true;
 }
 
+/*
+bool GyroBNO055::update() {
+  if (i2cGyro.isOpen() == false) {
+    return false;
+  }
+
+  uint8_t rawBytes[dataLen];
+  int len = i2cGyro.readBlock(accelAddr, rawBytes, sizeof(rawBytes));
+
+  if (len != sizeof(rawBytes)) {
+    cerr << "Failed to read in " << sizeof(rawBytes) << " bytes from BNO055\n";
+    i2cGyro.close();
+    return false;
+  }
+	
+  	for (int i = 0; i < len; i += 2) {
+		auto msb = rawBytes[i + 1];
+		auto lsb = rawBytes[i];
+
+		rawData[i / 2] = (uint16_t(msb) << 8) | lsb;
+	}
+	
+	return true;
+}
+*/
+
 bool GyroBNO055::getHeading(float& angDeg) {
   if (i2cGyro.isOpen() == false) {
     return false;
   }
 
-  uint8_t rawBytes[2];
+  uint8_t rawBytes[6];
   int len = i2cGyro.readBlock(eulerAddr, rawBytes, sizeof(rawBytes));
 
   if (len != sizeof(rawBytes)) {

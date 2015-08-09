@@ -6,6 +6,7 @@
 #include "CommandSequence.h"
 #include "Timon.h"
 #include "TimonDriveStraight.h"
+#include "Brake.h"
 
 #include "UserLeds.h"
 
@@ -133,26 +134,32 @@ Timon::Timon() :
     }
 }
 
+void doTurns(Timon& timon, CommandSequence* drive) {
+    // Give .25 seconds to let user move hand away
+    drive->add(new DrivePowerTime(timon, 0, 0, 0.25));
+
+    // How many turns to make
+    const float numberOfTurns = 4;
+
+    for (int i = 0; i < numberOfTurns; i++) {
+		// Make a right hand turn
+		drive->add(new MakeTurn(timon, 90.0));
+    }
+
+}
+
+void doStop(Timon& timon, CommandSequence* drive) {
+	drive->add(new DriveStraight(timon, 0, 2.0, true));
+	drive->add(new Brake(timon, 1.0));
+}
+
 void Timon::setAutonLongWay() {
     clear();
 
-    CommandSequence* drive = new CommandSequence("Drive");
+	auto drive = new CommandSequence("Drive");
 
-    // Give .25 seconds to let user move hand away
-    drive->add(new DrivePowerTime(*this, 0, 0, 0.25));
-
-
-    drive->add(new DrivePowerTime(*this, 0.2, 0.2, 5.0));
-    /*
-    // How many turns to make
-    const float numberOfTurns = 2;
-
-    for (int i = 0; i < numberOfTurns; i++) {
-	// Make a right hand turn
-	drive->add(new MakeTurn(*this, 90.0));
-    }
-    */
-    // Paranoid motor shut down (should be automatic)
+	//doTurns(*this, drive);
+	doStop(*this, drive);
 
     drive->print(cout);
 
@@ -169,18 +176,29 @@ void Timon::setAutonShortWay() {
     // Uncomment to spin left side forward one second followed
     // by right side forward for a second to verify logic is right
     //drive->add(new DrivePowerTime(*this, 0.2, 0, 1.0));
-    //drive->add(new DrivePowerTime(*this, 0, .2, 1.0));
 
     // Make a left hand turn
     //    drive->add(new DriveToTurn(*this, 0.2, 10.0));
-    const float numberOfTurns = 3;
+    const float numberOfTurns = 4;
+	float curAng = 0;
 
     for (int i = 0; i < numberOfTurns; i++) {
 	    // Experiment with "driving straight" command
-	    drive->add(new DriveStraight(*this, 0.0, 4.0, true));
+	    drive->add(new DriveStraight(*this, curAng, 2.0, false));
+
+		// Brake
+		drive->add(new Brake(*this, 1.0));
+
+		// Reverse
+		drive->add(new DrivePowerTime(*this, -0.15, -0.15, 0.6));
+
+		// And brake again, just to make sure
+		drive->add(new Brake(*this, 0.5));
 
 	    // Make a right hand turn
 	    drive->add(new MakeTurn(*this, 90.0));
+
+		curAng += 90;
     }
 
     drive->print(cout);
@@ -264,14 +282,14 @@ void Timon::readSensors() {
         }
 
         cerr << "WARNING: Framecount mismatch: " << data.frameCount
-	     << ", " << data.safetyFrameCount << "\n";
+	     	 << ", " << data.safetyFrameCount << "\n";
         Timer::sleep(0.001);
     }
 
     if (fileOk == false) {
-	_fileData.found = Found::None;
-	_crashed = true;
-	cerr << "***ERROR*** Failed to read valid record from stanchion file\n";
+		_fileData.found = Found::None;
+		_crashed = true;
+		cerr << "***ERROR*** Failed to read valid record from stanchion file\n";
     }
 
     //
@@ -450,9 +468,9 @@ Command::State MakeTurn::doExecute() {
     float carTurned = _car.getRelativeHeading(_initialHeading);
     float err = _turn - carTurned;
     float deltaErr = _lastErr - err;
-    const float P = (0.15f * 10.0f / 360.0f);
-    //const float D = (0.1f * 10.0f / 360.0f);
-    const float D = 0.0f;
+    const float P = (0.10f * 10.0f / 360.0f);
+    const float D = (0.1f * 10.0f / 360.0f);
+    //const float D = 0.0f;
 
     float steer = err * P + deltaErr * D;
 
@@ -465,15 +483,15 @@ Command::State MakeTurn::doExecute() {
     //const float minMag = 0.15f;
     //steer = (steer < 0) ? steer - minMag : steer + minMag;
     
-    const float baseMinMag = 0.15f;
+    const float baseMinMag = 0.05f;
 
     float minMag = baseMinMag;
     if (abs(carTurned - _lastCarTurned) < 0.4) {
-	minMag = maxMag;
+		minMag = maxMag;
     } 
     
     if (steer > -minMag && steer < minMag) {
-	steer = (steer < 0) ? -minMag : minMag;
+		steer = (steer < 0) ? -minMag : minMag;
     }
   
     steer = Timon::rangeCheckPower(steer);
@@ -489,14 +507,14 @@ Command::State MakeTurn::doExecute() {
     _lastErr = err;
 
     // Done if within 3 degrees
-    if (abs(err) < 5.0) {
+    if (abs(err) < 6.0) {
         _inRangeCnt++;
     } else {
         _inRangeCnt = 0;
     }
 
     _lastCarTurned = carTurned;
-    return ((_inRangeCnt >= 3) ? Command::NORMAL_END : Command::STILL_RUNNING);
+    return ((_inRangeCnt >= 2) ? Command::NORMAL_END : Command::STILL_RUNNING);
 }
 
 void MakeTurn::doEnd(Command::State reason) {

@@ -9,6 +9,8 @@
 #include "Timon.h"
 #endif
 
+#include "Timer.h"
+
 namespace avc {
 
     /**
@@ -54,6 +56,11 @@ namespace avc {
 	int getRedCount() const { return _car.getCounter(Found::Red) - _initialRed; }
 	int getYellowCount() const { return _car.getCounter(Found::Yellow) - _initialYellow; }
 
+	void resetCounts() {
+		_initialRed = _car.getCounter(Found::Red);
+		_initialYellow = _car.getCounter(Found::Yellow);
+	}
+ 
 	// Constant values
 	static const float DRIVE_POWER;
 	static const float MAX_DRIVE_POWER;
@@ -65,15 +72,21 @@ namespace avc {
 	// Member variables
         Timon& _car;
 	float _heading;
-        float _desiredHeading;
+	float _desiredHeading;
+	float _headingCorrection;
+
 	float _leftPower;
 	float _rightPower;
-        float _lastAngErr;
+	float _lastAngErr;
 	float _minTimeToDrive;
 	bool _relative;
 
 	int _initialRed;
 	int _initialYellow;
+
+	float _lastHeadingCorrection;
+
+	Timer _correctionTimer;
     };
 }
 

@@ -148,6 +148,11 @@ namespace avc {
 	 */
 	int getCounter(Found counter) const { return _stanchionCounts[counter]; }
 
+	/**
+	 * Gets the last recorded FileData
+	 */
+	FileData& getFileData() { return _fileData; }
+
         /**
          * Returns whether or not the last detection resulted in a yellow stanchion
          */
@@ -259,16 +264,33 @@ namespace avc {
          * @param rightPower The power output for the right side (range of [-1, +1].
          */
         void drive(float leftPower, float rightPower) {
-            _left.set(leftPower);
-            _right.set(rightPower);
+            _left.set(-rightPower);
+            _right.set(-leftPower);
         }
 
         /**
          * Sets the drive power to 0 allowing the car to coast to a stop.
          */
         void coast() {
+			releaseBrakes();
             drive(0.0, 0.0);
         }
+
+		/**
+		 * Brakes the robot
+		 */
+		void brake() {
+			_left.brake();
+			_right.brake();
+		}
+
+		/**
+		 * Disengages the motor brakes
+		 */
+		void releaseBrakes() {
+			_left.releaseBrake();
+			_right.releaseBrake();
+		}
 
         /**
          * Dumps some information about the current state of the vehicle
